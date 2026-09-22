@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSIT CampusVision AI — Live Campus Dashboard</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <img src="/static/images/psit-logo.svg" alt="PSIT Logo">
+      <div>
+        <div class="nav-title">PSIT CAMPUSVISION AI</div>
+        <div class="nav-subtitle">CCTV &amp; Computer Vision Campus Monitoring</div>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <div class="live-pill">
+        <span class="pulse-dot"></span>
+        <span>LIVE INFERENCE</span>
+      </div>
+
+      <div style="font-size: 13px; font-weight: 600; color: var(--text-muted);" id="liveClock">
+        --:--:--
+      </div>
+
+      <a href="/api/reports/export-csv" class="btn-export-csv" title="Download Excel/CSV Attendance & Occupancy Log">
+        📥 Export CSV Report
+      </a>
+
+      <div class="user-badge">
+        <span>👤 {{ user.name }}</span>
+        <span class="user-role-tag">{{ user.role }}</span>
+      </div>
+
+      <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-wrapper">
+
+    <!-- Active Safety & Timetable Alerts Section -->
+    <div id="alertsContainer" class="alerts-section" style="display: none;">
+      <!-- Dynamically filled with active alerts -->
+    </div>
+
+    <!-- Campus High-Level Stats -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon blue">👥</div>
+        <div class="stat-info">
+          <h4>Total Students Detected</h4>
+          <div class="value" id="statTotalPersons">--</div>
+          <div class="sub-label">Across all monitored campus zones</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon green">🏫</div>
+        <div class="stat-info">
+          <h4>Active Classrooms</h4>
+          <div class="value" id="statActiveRooms">--</div>
+          <div class="sub-label">Currently in-session</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon amber">🚪</div>
+        <div class="stat-info">
+          <h4>Empty Classrooms</h4>
+          <div class="value" id="statEmptyRooms">--</div>
+          <div class="sub-label">Available for allocation</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon purple">🚶</div>
+        <div class="stat-info">
+          <h4>Corridor Footfall</h4>
+          <div class="value" id="statCorridorFootfall">--</div>
+          <div class="sub-label">People in transit hallways</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live CCTV AI Camera Monitor (Centerpiece) -->
+    <section class="cctv-monitor-box">
+      <div class="cctv-header-row">
+        <div class="cctv-header-left">
+          <h2>📹 Live CCTV AI Camera Feed — Room A-101</h2>
+          <span id="cameraStatusBadge" class="badge badge-warning">CAMERA STANDBY</span>
+        </div>
+        <div class="cctv-controls">
+          <button id="btnStartCamera" onclick="startCamera()" class="btn-camera btn-camera-start">
+            ▶ Start AI Camera
+          </button>
+          <button id="btnStopCamera" onclick="stopCamera()" class="btn-camera btn-camera-stop" disabled>
+            ⏹ Stop Camera
+          </button>
+        </div>
+      </div>
+
+      <div class="cctv-screen-wrapper">
+        <img id="cctvStreamImg" src="/video_feed" alt="Live CCTV Stream" class="cctv-video-img">
+      </div>
+
+      <div class="cctv-footer-bar">
+        <div>
+          <strong>Detection Model:</strong> YOLOv11 Nano &bull; <strong>Target:</strong> Room A-101 &bull; <strong>Class:</strong> Person (Silhouette Only)
+        </div>
+        <div id="cctvStatusMsg" style="color: var(--accent-cyan);">
+          Click 'Start AI Camera' to activate webcam or run detect.py
+        </div>
+      </div>
+    </section>
+
+    <!-- Classroom Occupancy Grid -->
+    <section>
+      <div class="section-header">
+        <h2>🏫 Classroom Occupancy &amp; Capacity Tracker</h2>
+        <span class="sub">YOLOv11 Person Detection Feed (Updates in Real-Time)</span>
+      </div>
+
+      <div class="rooms-grid" id="roomsGrid">
+        <!-- Injected dynamically via dashboard.js -->
+        <div style="color: var(--text-muted); font-size: 14px;">Connecting to telemetry stream...</div>
+      </div>
+    </section>
+
+    <!-- Corridors & Timetable Split Grid -->
+    <section class="dashboard-split-grid">
+      
+      <!-- Corridor Monitoring -->
+      <div>
+        <div class="section-header">
+          <h2>🚶 Corridor Crowd Flow</h2>
+          <span class="sub">Hallway Transit &amp; Safety</span>
+        </div>
+        <div class="corridor-list" id="corridorList">
+          <!-- Injected dynamically via dashboard.js -->
+          <div style="color: var(--text-muted); font-size: 14px;">Loading corridor data...</div>
+        </div>
+      </div>
+
+      <!-- Timetable Verification -->
+      <div>
+        <div class="section-header">
+          <h2>📅 Faculty Timetable Live Verification</h2>
+          <span class="sub">Automated Schedule vs. Live Detection Cross-Check</span>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Faculty &amp; Subject</th>
+                <th>Room</th>
+                <th>Scheduled Slot</th>
+                <th>Detected / Expected</th>
+                <th>Verification Status</th>
+              </tr>
+            </thead>
+            <tbody id="timetableBody">
+              <!-- Injected dynamically via dashboard.js -->
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted);">Loading timetable verification...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div>
+      <strong>CampusVision AI</strong> &bull; Developed for PSIT College Tech Expo 2026
+    </div>
+    <div>
+      Powered by FastAPI, OpenCV &amp; YOLOv11 &bull; Privacy Preserving (Zero Facial Tracking)
+    </div>
+  </footer>
+
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
