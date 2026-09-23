@@ -17,6 +17,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse,
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import database as db
+from pwdlib import PasswordHash
+
+password_hash = PasswordHash.recommended()
 
 app = FastAPI(
     title="PSIT CampusVision AI",
@@ -288,23 +291,49 @@ def login(
     college_id: str = Form(...),
     password: str = Form(...)
 ):
-    """Authenticate user against SQLite database and redirect to dashboard."""
-    user = db.get_user_by_id(college_id.strip())
+    """Authenticate user using a hashed password."""
+    college_id = college_id.strip()
+    user = db.get_user_by_id(college_id)
+    is_valid_password = False
 
-    if user and user["password"] == password:
+    if user:
+        stored_password = user["password"]
+
+        # Secure Argon2 password
+        if stored_password.startswith("$argon2"):
+            try:
+                is_valid_password = password_hash.verify(
+                    password, stored_password
+                )
+            except Exception:
+                is_valid_password = False
+        else:
+            # Temporary support for old plain-text demo passwords.
+            # After a successful login, upgrade them to Argon2 automatically.
+            is_valid_password = stored_password == password
+
+            if is_valid_password:
+                upgraded_password = password_hash.hash(password)
+                db.update_user_password(college_id, upgraded_password)
+
+    if user and is_valid_password:
         redirect = RedirectResponse(url="/dashboard", status_code=303)
         redirect.set_cookie(
             key="session_user",
-            value=college_id.strip(),
+            value=college_id,
             httponly=True,
-            samesite="lax"
+            samesite="lax",
+            secure=False
         )
         return redirect
 
     return templates.TemplateResponse(
         request=request,
         name="login.html",
-        context={"error": "Invalid College ID or Password. If you don't have an account, click 'Register ID'.", "success": None},
+        context={
+            "error": "Invalid College ID or Password. Please try again.",
+            "success": None
+        },
         status_code=401
     )
 
@@ -318,7 +347,14 @@ def register(
     password: str = Form(...)
 ):
     """Register a new user directly into the SQLite database."""
-    created = db.create_user(college_id.strip(), password.strip(), name.strip(), role.strip(), dept.strip())
+    hashed_password = password_hash.hash(password.strip())
+    created = db.create_user(
+        college_id.strip(),
+        hashed_password,
+        name.strip(),
+        role.strip(),
+        dept.strip()
+    )
 
     if not created:
         return templates.TemplateResponse(
@@ -345,7 +381,11 @@ def reset_password(
     new_password: str = Form(...)
 ):
     """Reset password for an existing user account in SQLite."""
-    updated = db.update_user_password(college_id.strip(), new_password.strip())
+    hashed_password = password_hash.hash(new_password.strip())
+    updated = db.update_user_password(
+        college_id.strip(),
+        hashed_password
+    )
     if updated:
         return templates.TemplateResponse(
             request=request,
