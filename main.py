@@ -17,9 +17,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse,
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import database as db
-from pwdlib import PasswordHash
-
-password_hash = PasswordHash.recommended()
+from ai_state import ai_state_manager
+from face_engine import FaceRecognizer
 
 app = FastAPI(
     title="PSIT CampusVision AI",
@@ -291,49 +290,23 @@ def login(
     college_id: str = Form(...),
     password: str = Form(...)
 ):
-    """Authenticate user using a hashed password."""
-    college_id = college_id.strip()
-    user = db.get_user_by_id(college_id)
-    is_valid_password = False
+    """Authenticate user against SQLite database and redirect to dashboard."""
+    user = db.get_user_by_id(college_id.strip())
 
-    if user:
-        stored_password = user["password"]
-
-        # Secure Argon2 password
-        if stored_password.startswith("$argon2"):
-            try:
-                is_valid_password = password_hash.verify(
-                    password, stored_password
-                )
-            except Exception:
-                is_valid_password = False
-        else:
-            # Temporary support for old plain-text demo passwords.
-            # After a successful login, upgrade them to Argon2 automatically.
-            is_valid_password = stored_password == password
-
-            if is_valid_password:
-                upgraded_password = password_hash.hash(password)
-                db.update_user_password(college_id, upgraded_password)
-
-    if user and is_valid_password:
+    if user and user["password"] == password:
         redirect = RedirectResponse(url="/dashboard", status_code=303)
         redirect.set_cookie(
             key="session_user",
-            value=college_id,
+            value=college_id.strip(),
             httponly=True,
-            samesite="lax",
-            secure=False
+            samesite="lax"
         )
         return redirect
 
     return templates.TemplateResponse(
         request=request,
         name="login.html",
-        context={
-            "error": "Invalid College ID or Password. Please try again.",
-            "success": None
-        },
+        context={"error": "Invalid College ID or Password. If you don't have an account, click 'Register ID'.", "success": None},
         status_code=401
     )
 
@@ -347,14 +320,7 @@ def register(
     password: str = Form(...)
 ):
     """Register a new user directly into the SQLite database."""
-    hashed_password = password_hash.hash(password.strip())
-    created = db.create_user(
-        college_id.strip(),
-        hashed_password,
-        name.strip(),
-        role.strip(),
-        dept.strip()
-    )
+    created = db.create_user(college_id.strip(), password.strip(), name.strip(), role.strip(), dept.strip())
 
     if not created:
         return templates.TemplateResponse(
@@ -381,11 +347,7 @@ def reset_password(
     new_password: str = Form(...)
 ):
     """Reset password for an existing user account in SQLite."""
-    hashed_password = password_hash.hash(new_password.strip())
-    updated = db.update_user_password(
-        college_id.strip(),
-        hashed_password
-    )
+    updated = db.update_user_password(college_id.strip(), new_password.strip())
     if updated:
         return templates.TemplateResponse(
             request=request,
@@ -694,12 +656,12 @@ class CampusCameraDetector:
         self.camera_index = camera_index
         self.camera = None
         self.model = None
+        self.face_recognizer = None
         self.is_running = False
         self.thread = None
         self.lock = threading.Lock()
         self.latest_count = 0
         self.status_message = "Camera Standby (Click 'Start AI Camera' to activate)"
-
     def load_model(self):
         if self.model is None:
             try:
@@ -710,7 +672,15 @@ class CampusCameraDetector:
             except Exception as e:
                 print(f"[CampusVision AI] Model loading error: {e}")
                 self.model = None
-
+        if self.face_recognizer is None:
+            try:
+                print("[CampusVision AI] Loading FaceRecognizer...")
+                self.face_recognizer = FaceRecognizer(known_faces_dir="known_faces", threshold=0.8)
+                self.face_recognizer.load_known_faces()
+                print("[CampusVision AI] FaceRecognizer ready.")
+            except Exception as e:
+                print(f"[CampusVision AI] FaceRecognizer loading error: {e}")
+                self.face_recognizer = None
     def start(self, camera_index: Optional[int] = None):
         with self.lock:
             if self.is_running:
@@ -729,6 +699,7 @@ class CampusCameraDetector:
                     return False, self.status_message
 
                 self.is_running = True
+                ai_state_manager.set_camera_active(True)
                 self.status_message = "Camera Active (YOLOv11 Detection Running)"
                 self.thread = threading.Thread(target=self._worker_loop, daemon=True)
                 self.thread.start()
@@ -749,6 +720,7 @@ class CampusCameraDetector:
                 return True, "Camera is already stopped"
 
             self.is_running = False
+            ai_state_manager.set_camera_active(False)
             if self.camera:
                 self.camera.release()
                 self.camera = None
@@ -759,6 +731,9 @@ class CampusCameraDetector:
     def _worker_loop(self):
         global latest_camera_frame, latest_frame_time
         frame_idx = 0
+        import time as time_mod
+        prev_time = time_mod.time()
+        fps_list = []
 
         while self.is_running:
             if not self.camera or not self.camera.isOpened():
@@ -771,6 +746,10 @@ class CampusCameraDetector:
 
             frame_idx += 1
             person_count = 0
+            face_count = 0
+            recognized_count = 0
+            unknown_count = 0
+            detections = []
             annotated_frame = frame
 
             if self.model:
@@ -786,6 +765,44 @@ class CampusCameraDetector:
                 except Exception as e:
                     annotated_frame = frame
 
+            if self.face_recognizer and frame_idx % 3 == 0:
+                try:
+                    face_results = self.face_recognizer.recognize_faces(frame)
+                    faces = face_results["faces"]
+                    recognized_count = face_results["recognized_count"]
+                    unknown_count = face_results["unknown_count"]
+                    face_count = len(faces)
+                    detections = faces
+                except Exception as e:
+                    print(f"Face recognition error: {e}")
+            else:
+                last_state = ai_state_manager.get_state()
+                face_count = last_state.get("face_count", 0)
+                recognized_count = last_state.get("recognized_count", 0)
+                unknown_count = last_state.get("unknown_count", 0)
+                detections = last_state.get("detections", [])
+                
+            for face in detections:
+                x1, y1, x2, y2 = face["box"]
+                name = face["name"]
+                
+                if face["status"] == "recognized":
+                    db.mark_attendance(face["student_id"])
+                    
+                color = (0, 255, 0) if name != "Unknown" else (0, 0, 255)
+                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 2)
+                cv2.putText(annotated_frame, name, (x1, max(y1 - 10, 0)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+
+            curr_time = time_mod.time()
+            fps = 1.0 / (curr_time - prev_time) if curr_time > prev_time else 30.0
+            prev_time = curr_time
+            fps_list.append(fps)
+            if len(fps_list) > 10:
+                fps_list.pop(0)
+            avg_fps = sum(fps_list) / len(fps_list)
+
+            ai_state_manager.update_state(person_count, face_count, recognized_count, unknown_count, detections, avg_fps)
             self.latest_count = person_count
 
             # Auto-sync with Room A-101 and Campus State
@@ -866,6 +883,94 @@ def stop_camera():
         "is_running": camera_detector.is_running
     }
 
+# =====================================================================
+# STUDENT & ATTENDANCE API
+# =====================================================================
+
+@app.post("/api/students")
+async def enroll_student(
+    name: str = Form(...),
+    student_id: str = Form(...),
+    photo: UploadFile = File(...)
+):
+    """Enroll a new student."""
+    if photo.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+        raise HTTPException(status_code=400, detail="Invalid image format. Only JPEG/PNG/WEBP allowed.")
+        
+    # Check duplicate
+    if db.get_student_by_id(student_id):
+        raise HTTPException(status_code=400, detail="Student ID already exists.")
+        
+    contents = await photo.read()
+    
+    # Validate exactly one face using MTCNN
+    try:
+        from PIL import Image
+        import io
+        img = Image.open(io.BytesIO(contents)).convert('RGB')
+        # We can use the existing MTCNN if camera_detector has it loaded
+        # However, to avoid thread collisions, we can use a fresh MTCNN or just the one in camera_detector if locked
+        if camera_detector.face_recognizer:
+            faces = camera_detector.face_recognizer.mtcnn(img)
+            if faces is None or len(faces) == 0:
+                raise HTTPException(status_code=400, detail="No face detected. Please upload a clear face photo.")
+            if len(faces) > 1:
+                raise HTTPException(status_code=400, detail="Multiple faces detected. Please upload a photo containing only the student.")
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=400, detail=f"Error validating image: {str(e)}")
+        
+    import os
+    os.makedirs("known_faces", exist_ok=True)
+    ext = os.path.splitext(photo.filename)[1]
+    if not ext: ext = ".jpg"
+    safe_filename = f"{student_id}{ext}"
+    filepath = os.path.join("known_faces", safe_filename)
+    
+    with open(filepath, "wb") as f:
+        f.write(contents)
+        
+    # Save to DB
+    success = db.add_student(student_id, name, filepath)
+    if not success:
+        os.remove(filepath)
+        raise HTTPException(status_code=500, detail="Failed to insert into database.")
+        
+    # Reload engine
+    if camera_detector.face_recognizer:
+        camera_detector.face_recognizer.reload_known_faces()
+        
+    return {"success": True, "message": "Student enrolled successfully"}
+
+@app.get("/api/students")
+def get_students():
+    return db.get_students()
+
+@app.delete("/api/students/{student_id}")
+def delete_student(student_id: str):
+    student = db.get_student_by_id(student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+        
+    if student['photo_path']:
+        import os
+        try:
+            if os.path.exists(student['photo_path']):
+                os.remove(student['photo_path'])
+        except Exception:
+            pass
+            
+    db.delete_student(student_id)
+    if camera_detector.face_recognizer:
+        camera_detector.face_recognizer.reload_known_faces()
+    return {"success": True}
+
+@app.get("/api/attendance")
+def get_attendance():
+    records = db.get_today_attendance()
+    return {"records": records}
+
 @app.post("/camera/frame")
 async def receive_camera_frame(file: UploadFile = File(...)):
     """Receives annotated JPEG frames uploaded from external detect.py script."""
@@ -922,3 +1027,8 @@ def video_feed():
         generate_video_stream(),
         media_type="multipart/x-mixed-replace; boundary=frame"
     )
+
+@app.get("/api/ai/detections")
+def get_ai_detections():
+    """Return real-time YOLO and FaceNet AI state."""
+    return ai_state_manager.get_state()

@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-python-multipart
-requests
-opencv-python-headless
-jinja2
-pwdlib[argon2]

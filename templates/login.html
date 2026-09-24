@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PSIT CampusVision AI — Portal</title>
-  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/styles.css') }}">
 </head>
 <body>
 
   <div class="login-container">
     <div class="login-card">
       <div class="brand-header">
-        <img src="/static/images/psit-logo.svg" alt="PSIT Logo" class="logo">
+        <img src="{{ url_for('static', path='images/psit-logo.svg') }}" alt="PSIT Logo" class="logo">
         <h1>CAMPUSVISION AI</h1>
         <div class="subtitle">Smart Campus Monitoring</div>
         <div class="college-tag">Pranveer Singh Institute of Technology (PSIT)</div>

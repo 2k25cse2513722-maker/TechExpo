@@ -89,3 +89,78 @@ python run_app.py
    python detect.py
    ```
    *Your live webcam feed will detect persons, draw bounding boxes, and update the Room A-101 count on the dashboard in real-time!*
+
+
+                    CAMERA
+                    │
+                    ▼
+             ┌─────────────┐
+             │    YOLO     │
+             │ Person      │
+             │ Detection   │
+             └──────┬──────┘
+                    │
+              People Count
+                    │
+                    ▼
+             ┌─────────────┐
+             │    MTCNN    │
+             │ Face Detect │
+             └──────┬──────┘
+                    │
+                    ▼
+          ┌──────────────────┐
+          │   FaceNet /      │
+          │ InceptionResNet  │
+          └────────┬─────────┘
+                   │
+             Face Embedding
+                   │
+                   ▼
+            Known Faces
+                   │
+          ┌────────┴────────┐
+          ▼                 ▼
+      RECOGNIZED          UNKNOWN
+          │
+          ▼
+       STUDENT
+          │
+          ▼
+      ATTENDANCE
+          │
+          ▼
+       DATABASE
+          │
+          ▼
+       DASHBOARD
+
+
+
+
+
+
+
+
+                            detect.py
+                         ↓
+                     Camera
+                         ↓
+                  Person detection
+                         ↓
+                 ┌───────┴────────┐
+                 ↓                ↓
+          Person/Head count   Face detection
+                 ↓                ↓
+          Total students    Face recognition
+                                  ↓
+                           Student identity
+                                  ↓
+                            Attendance logic
+                                  ↓
+                       /occupancy/update
+                       /attendance/update
+                                  ↓
+                               SQLite
+                                  ↓
+                             Dashboard

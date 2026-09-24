@@ -91,6 +91,30 @@ def init_db():
     )
     """)
 
+    # 7. Students Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS students (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        photo_path TEXT,
+        created_at TEXT,
+        active INTEGER DEFAULT 1
+    )
+    """)
+
+    # 8. Attendance Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS attendance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        first_seen TEXT NOT NULL,
+        last_seen TEXT NOT NULL,
+        status TEXT NOT NULL
+    )
+    """)
+
     conn.commit()
 
     # Seed Initial Data if empty
@@ -383,6 +407,102 @@ def get_dismissed_alert_ids() -> set:
     rows = cursor.fetchall()
     conn.close()
     return {r[0] for r in rows}
+
+# =====================================================================
+# STUDENT ENROLLMENT CRUD FUNCTIONS
+# =====================================================================
+
+def add_student(student_id: str, name: str, photo_path: str) -> bool:
+    """Add a new student to the database."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute(
+            "INSERT INTO students (student_id, name, photo_path, created_at, active) VALUES (?, ?, ?, ?, ?)",
+            (student_id, name, photo_path, now, 1)
+        )
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
+
+def get_students() -> List[dict]:
+    """Retrieve all active students."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM students WHERE active = 1 ORDER BY created_at DESC")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_student_by_id(student_id: str) -> Optional[dict]:
+    """Retrieve student by student_id."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM students WHERE student_id = ? AND active = 1", (student_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def delete_student(student_id: str) -> bool:
+    """Delete a student by student_id."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
+    rows = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return rows > 0
+
+# =====================================================================
+# ATTENDANCE CRUD FUNCTIONS
+# =====================================================================
+
+def mark_attendance(student_id: str):
+    """Mark attendance for a student (creates or updates last_seen)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    today = time.strftime("%Y-%m-%d")
+    now = time.strftime("%H:%M:%S")
+    
+    cursor.execute("SELECT * FROM attendance WHERE student_id = ? AND date = ?", (student_id, today))
+    row = cursor.fetchone()
+    
+    if row:
+        cursor.execute(
+            "UPDATE attendance SET last_seen = ? WHERE id = ?",
+            (now, row['id'])
+        )
+    else:
+        cursor.execute(
+            "INSERT INTO attendance (student_id, date, first_seen, last_seen, status) VALUES (?, ?, ?, ?, ?)",
+            (student_id, today, now, now, "Present")
+        )
+        
+    conn.commit()
+    conn.close()
+
+def get_today_attendance() -> List[dict]:
+    """Retrieve today's attendance logs."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    today = time.strftime("%Y-%m-%d")
+    
+    cursor.execute("""
+        SELECT a.*, s.name 
+        FROM attendance a 
+        JOIN students s ON a.student_id = s.student_id 
+        WHERE a.date = ?
+        ORDER BY a.first_seen DESC
+    """, (today,))
+    
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 # Initialize on module import
 init_db()
