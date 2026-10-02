@@ -1,0 +1,1225 @@
+/* =====================================================================
+   CAMPUSVISION AI — PREMIUM SMART CAMPUS LOGIN & AUTH SYSTEM
+   Tech Expo 2026 Edition | PSIT Smart Vision Engine
+   ===================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --cv-bg-black: #06080e;
+  --cv-bg-dark: #0a0e17;
+  --cv-bg-surface: #0f1624;
+  --cv-bg-glass: rgba(13, 19, 33, 0.78);
+  --cv-bg-glass-input: rgba(17, 24, 39, 0.65);
+  
+  --cv-border-subtle: rgba(255, 255, 255, 0.08);
+  --cv-border-highlight: rgba(6, 182, 212, 0.35);
+  --cv-border-focus: #06b6d4;
+  
+  --cv-cyan: #06b6d4;
+  --cv-cyan-bright: #22d3ee;
+  --cv-cyan-glow: rgba(6, 182, 212, 0.35);
+  --cv-teal: #0d9488;
+  --cv-blue: #3b82f6;
+  --cv-emerald: #10b981;
+  --cv-amber: #f59e0b;
+  --cv-red: #ef4444;
+  
+  --cv-text-primary: #f8fafc;
+  --cv-text-secondary: #94a3b8;
+  --cv-text-muted: #64748b;
+  --cv-text-dim: #475569;
+  
+  --cv-font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --cv-font-mono: 'JetBrains Mono', monospace;
+  
+  --cv-radius-sm: 8px;
+  --cv-radius-md: 12px;
+  --cv-radius-lg: 18px;
+  --cv-radius-xl: 24px;
+}
+
+/* Reset for Login Page */
+body.login-page-body {
+  font-family: var(--cv-font-sans);
+  background-color: var(--cv-bg-black);
+  color: var(--cv-text-primary);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Sophisticated Background Cyber Canvas */
+.login-bg-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: 
+    radial-gradient(ellipse 70% 50% at 20% 25%, rgba(6, 182, 212, 0.09), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 85% 75%, rgba(59, 130, 246, 0.08), transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(13, 148, 136, 0.04), transparent 80%),
+    linear-gradient(180deg, #06080e 0%, #0a0e17 50%, #07090e 100%);
+}
+
+.login-bg-grid {
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 85%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* =====================================================================
+   SPLIT LAYOUT
+   Left: 58% Campus Experience
+   Right: 42% Login Card
+   ===================================================================== */
+.login-split-page {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------------------------------------------------------------
+   LEFT SIDE — CAMPUSVISION EXPERIENCE
+   --------------------------------------------------------------------- */
+.login-visual-panel {
+  flex: 0 0 58%;
+  max-width: 58%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px 56px;
+  position: relative;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: 
+    linear-gradient(135deg, rgba(6, 182, 212, 0.03) 0%, transparent 40%),
+    linear-gradient(180deg, rgba(10, 14, 23, 0.75) 0%, rgba(6, 8, 14, 0.95) 100%);
+  overflow: hidden;
+}
+
+/* Visual Panel Header Branding */
+.panel-brand-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  animation: cvFadeDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.panel-brand-logo-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--cv-radius-md);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(59, 130, 246, 0.1));
+  border: 1px solid var(--cv-border-highlight);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 6px;
+}
+
+.panel-brand-logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.panel-brand-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--cv-cyan-bright);
+  background: rgba(6, 182, 212, 0.1);
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  width: fit-content;
+  margin-bottom: 6px;
+}
+
+.brand-meta-badge .badge-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cv-cyan);
+  box-shadow: 0 0 8px var(--cv-cyan);
+  animation: cvDotPulse 2s infinite ease-in-out;
+}
+
+.panel-brand-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.15;
+  background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.panel-brand-college {
+  font-size: 12.5px;
+  color: var(--cv-text-secondary);
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.panel-brand-tagline {
+  font-size: 12px;
+  color: var(--cv-cyan);
+  margin-top: 4px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* Center Hero Section */
+.panel-center-hero {
+  margin: 28px 0;
+  display: flex;
+  flex-direction: column;
+  animation: cvFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both 0.15s;
+}
+
+.hero-main-title {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #ffffff;
+  max-width: 580px;
+  letter-spacing: -0.5px;
+  margin-bottom: 12px;
+}
+
+.hero-main-title .gradient-text {
+  background: linear-gradient(135deg, #22d3ee 0%, #38bdf8 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-sub-text {
+  font-size: 14px;
+  color: var(--cv-text-secondary);
+  line-height: 1.6;
+  max-width: 520px;
+  margin-bottom: 24px;
+}
+
+/* =====================================================================
+   CAMPUS DIGITAL TWIN ARCHITECTURE SCHEMATIC (SVG / VISUALIZATION)
+   ===================================================================== */
+.campus-schematic-card {
+  background: rgba(11, 16, 26, 0.65);
+  border: 1px solid var(--cv-border-subtle);
+  border-radius: var(--cv-radius-lg);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+
+.campus-schematic-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.6), transparent);
+}
+
+/* Scanning Sweep Beam */
+.campus-scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.9), transparent);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.8), 0 0 32px rgba(6, 182, 212, 0.5);
+  animation: cvScanSweep 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Schematic Top Status Bar */
+.schematic-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.schematic-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--cv-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--cv-cyan-bright);
+}
+
+.schematic-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cv-emerald);
+  box-shadow: 0 0 8px var(--cv-emerald);
+  animation: cvDotPulse 1.8s infinite;
+}
+
+.schematic-stats-mini {
+  display: flex;
+  gap: 16px;
+  font-family: var(--cv-font-mono);
+  font-size: 10.5px;
+  color: var(--cv-text-muted);
+}
+
+.schematic-stats-mini span strong {
+  color: var(--cv-text-primary);
+  font-weight: 600;
+}
+
+/* Schematic Canvas Graphic */
+.schematic-svg-canvas {
+  width: 100%;
+  height: 210px;
+  display: block;
+}
+
+/* SVG Elements Styling */
+.svg-grid-line {
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 1;
+}
+
+.svg-data-connector {
+  stroke: rgba(6, 182, 212, 0.25);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  animation: cvDataFlow 20s linear infinite;
+}
+
+.svg-active-highway {
+  stroke: rgba(6, 182, 212, 0.6);
+  stroke-width: 2;
+  stroke-dasharray: 8 6;
+  animation: cvDataFlow 12s linear infinite;
+}
+
+.svg-block-rect {
+  fill: rgba(17, 24, 39, 0.85);
+  stroke: rgba(6, 182, 212, 0.4);
+  stroke-width: 1.2;
+  rx: 8;
+  transition: all 0.3s ease;
+}
+
+.svg-block-rect:hover {
+  stroke: var(--cv-cyan-bright);
+  fill: rgba(23, 37, 60, 0.95);
+  filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.3));
+}
+
+.svg-landmark-rect {
+  fill: rgba(30, 41, 59, 0.85);
+  stroke: rgba(59, 130, 246, 0.5);
+  stroke-width: 1.4;
+  rx: 8;
+}
+
+.svg-camera-node {
+  fill: #06080e;
+  stroke: var(--cv-cyan-bright);
+  stroke-width: 2;
+}
+
+.svg-camera-ping {
+  fill: none;
+  stroke: var(--cv-cyan);
+  stroke-width: 1.5;
+  animation: cvRadarPing 3s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  transform-origin: center;
+}
+
+.svg-block-title {
+  fill: #ffffff;
+  font-family: var(--cv-font-sans);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.svg-block-sub {
+  fill: var(--cv-cyan-bright);
+  font-family: var(--cv-font-mono);
+  font-size: 8.5px;
+  font-weight: 500;
+}
+
+.svg-metric-badge {
+  fill: rgba(6, 182, 212, 0.12);
+  stroke: rgba(6, 182, 212, 0.3);
+  stroke-width: 1;
+  rx: 4;
+}
+
+.svg-metric-text {
+  fill: #22d3ee;
+  font-family: var(--cv-font-mono);
+  font-size: 8px;
+  font-weight: 600;
+}
+
+/* Schematic Micro Footer Badges */
+.schematic-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.telemetry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--cv-radius-sm);
+  font-size: 11px;
+  font-family: var(--cv-font-mono);
+  color: var(--cv-text-secondary);
+}
+
+.telemetry-pill strong {
+  color: #ffffff;
+}
+
+.telemetry-pill.accent {
+  border-color: rgba(6, 182, 212, 0.25);
+  background: rgba(6, 182, 212, 0.08);
+  color: var(--cv-cyan-bright);
+}
+
+/* Bottom Status Row */
+.panel-system-status {
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  animation: cvFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both 0.25s;
+}
+
+.status-header-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: var(--cv-text-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-header-label .demo-tag {
+  font-size: 9.5px;
+  color: var(--cv-text-dim);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.3px;
+}
+
+.status-indicators-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.status-indicator-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--cv-text-secondary);
+  font-family: var(--cv-font-mono);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.status-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  animation: cvStatusGlow 2.5s infinite ease-in-out;
+}
+
+.status-dot.emerald {
+  background: var(--cv-emerald);
+  box-shadow: 0 0 8px var(--cv-emerald);
+}
+.status-dot.emerald::after {
+  border: 1px solid var(--cv-emerald);
+}
+
+.status-dot.cyan {
+  background: var(--cv-cyan-bright);
+  box-shadow: 0 0 8px var(--cv-cyan-bright);
+}
+.status-dot.cyan::after {
+  border: 1px solid var(--cv-cyan-bright);
+}
+
+.status-dot.blue {
+  background: var(--cv-blue);
+  box-shadow: 0 0 8px var(--cv-blue);
+}
+.status-dot.blue::after {
+  border: 1px solid var(--cv-blue);
+}
+
+/* =====================================================================
+   RIGHT SIDE — LOGIN CARD PANEL
+   ===================================================================== */
+.login-form-panel {
+  flex: 0 0 42%;
+  max-width: 42%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 48px;
+  position: relative;
+  overflow-y: auto;
+}
+
+/* Premium Glassmorphism Login Card */
+.cv-glass-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--cv-bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--cv-border-subtle);
+  border-radius: var(--cv-radius-xl);
+  padding: 36px 36px 28px;
+  box-shadow: 
+    0 24px 60px -12px rgba(0, 0, 0, 0.75),
+    0 0 40px rgba(6, 182, 212, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  animation: cvCardEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cv-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.7), transparent);
+}
+
+/* Card Header */
+.card-header-block {
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.card-top-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.mobile-only-logo {
+  display: none;
+  width: 32px;
+  height: 32px;
+}
+
+.card-system-badge {
+  font-family: var(--cv-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--cv-cyan-bright);
+}
+
+.card-welcome-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.3px;
+}
+
+.card-welcome-desc {
+  font-size: 13.5px;
+  color: var(--cv-text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------
+   NAVIGATION TABS (Sign In / Register ID / Reset Password)
+   --------------------------------------------------------------------- */
+.cv-auth-tabs {
+  display: flex;
+  background: rgba(10, 14, 23, 0.8);
+  padding: 4px;
+  border-radius: var(--cv-radius-md);
+  margin-bottom: 22px;
+  border: 1px solid var(--cv-border-subtle);
+  position: relative;
+  gap: 3px;
+}
+
+.cv-auth-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--cv-text-secondary);
+  padding: 9px 8px;
+  border-radius: var(--cv-radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--cv-font-sans);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.cv-auth-tab:hover:not(.active) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cv-auth-tab.active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.95), rgba(2, 132, 199, 0.95));
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+}
+
+/* ---------------------------------------------------------------------
+   ALERT BANNERS
+   --------------------------------------------------------------------- */
+.cv-alert-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--cv-radius-md);
+  font-size: 12.5px;
+  line-height: 1.45;
+  margin-bottom: 20px;
+  animation: cvFadeIn 0.3s ease;
+}
+
+.cv-alert-banner.error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.cv-alert-banner.success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #6ee7b7;
+}
+
+.cv-alert-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+
+/* ---------------------------------------------------------------------
+   FORM STYLES & INPUT DESIGN
+   --------------------------------------------------------------------- */
+.cv-auth-form {
+  text-align: left;
+}
+
+.cv-form-group {
+  margin-bottom: 18px;
+}
+
+.cv-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cv-text-primary);
+  margin-bottom: 7px;
+  letter-spacing: 0.2px;
+}
+
+.cv-label .label-tag {
+  font-size: 10.5px;
+  color: var(--cv-text-muted);
+  font-weight: 400;
+}
+
+/* Input Wrapper with Icons */
+.cv-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cv-input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--cv-text-muted);
+  width: 17px;
+  height: 17px;
+  pointer-events: none;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cv-input {
+  width: 100%;
+  background: var(--cv-bg-glass-input);
+  border: 1px solid var(--cv-border-subtle);
+  border-radius: var(--cv-radius-md);
+  color: var(--cv-text-primary);
+  padding: 11.5px 14px 11.5px 42px;
+  font-size: 13.5px;
+  font-family: var(--cv-font-sans);
+  transition: all 0.25s ease;
+  outline: none;
+}
+
+.cv-input::placeholder {
+  color: var(--cv-text-muted);
+  font-size: 13px;
+}
+
+.cv-input:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(21, 30, 48, 0.7);
+}
+
+.cv-input:focus {
+  border-color: var(--cv-cyan);
+  background: rgba(23, 33, 53, 0.85);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.18), 0 0 16px rgba(6, 182, 212, 0.1);
+}
+
+.cv-input-wrapper:focus-within .cv-input-icon {
+  color: var(--cv-cyan-bright);
+}
+
+/* Password Visibility Toggle */
+.cv-input-with-toggle {
+  padding-right: 44px;
+}
+
+.cv-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--cv-text-muted);
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.cv-password-toggle:hover {
+  color: var(--cv-cyan-bright);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cv-password-toggle svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Select Dropdown */
+.cv-select {
+  width: 100%;
+  background: var(--cv-bg-glass-input);
+  border: 1px solid var(--cv-border-subtle);
+  border-radius: var(--cv-radius-md);
+  color: var(--cv-text-primary);
+  padding: 11.5px 14px 11.5px 42px;
+  font-size: 13.5px;
+  font-family: var(--cv-font-sans);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.cv-select option {
+  background: var(--cv-bg-surface);
+  color: var(--cv-text-primary);
+  padding: 8px;
+}
+
+.cv-select:focus {
+  border-color: var(--cv-cyan);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.18);
+}
+
+/* ---------------------------------------------------------------------
+   SUBMIT BUTTON & LOADING STATE
+   --------------------------------------------------------------------- */
+.cv-submit-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+  color: #ffffff;
+  border: none;
+  padding: 13px 18px;
+  border-radius: var(--cv-radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  font-family: var(--cv-font-sans);
+  cursor: pointer;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 18px rgba(6, 182, 212, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.cv-submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+}
+
+.cv-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(6, 182, 212, 0.45);
+  background: linear-gradient(135deg, #0891b2 0%, #0369a1 100%);
+}
+
+.cv-submit-btn:hover::before {
+  left: 150%;
+}
+
+.cv-submit-btn:active {
+  transform: translateY(0);
+}
+
+.cv-submit-btn.btn-amber {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 4px 18px rgba(217, 119, 6, 0.35);
+}
+
+.cv-submit-btn.btn-amber:hover {
+  background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+  box-shadow: 0 8px 26px rgba(217, 119, 6, 0.45);
+}
+
+/* Spinner for Loading State */
+.cv-spinner {
+  display: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: cvSpin 0.75s linear infinite;
+}
+
+.cv-submit-btn.loading .btn-text-content {
+  display: none;
+}
+
+.cv-submit-btn.loading .cv-spinner {
+  display: inline-block;
+}
+
+.cv-submit-btn.loading .btn-loading-text {
+  display: inline-block;
+}
+
+.btn-loading-text {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------
+   TECH EXPO DEMO ACCESS CARD
+   --------------------------------------------------------------------- */
+.cv-demo-box {
+  margin-top: 24px;
+  background: rgba(10, 14, 23, 0.75);
+  border: 1px solid var(--cv-border-subtle);
+  border-radius: var(--cv-radius-md);
+  padding: 16px;
+  text-align: left;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cv-demo-box:hover {
+  border-color: rgba(6, 182, 212, 0.3);
+  background: rgba(12, 18, 30, 0.85);
+}
+
+.demo-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.demo-title-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.demo-title-group svg {
+  width: 15px;
+  height: 15px;
+  color: var(--cv-cyan-bright);
+}
+
+.demo-box-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #ffffff;
+  margin: 0;
+}
+
+.expo-badge {
+  font-family: var(--cv-font-mono);
+  font-size: 9.5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(6, 182, 212, 0.12);
+  color: var(--cv-cyan-bright);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  font-weight: 600;
+}
+
+.demo-accounts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.demo-role-card {
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--cv-radius-sm);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.demo-role-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.demo-role-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--cv-text-muted);
+}
+
+.demo-role-creds {
+  font-family: var(--cv-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+.demo-role-creds .demo-pass-hint {
+  font-size: 10.5px;
+  color: var(--cv-text-secondary);
+  font-weight: 400;
+}
+
+.demo-fill-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--cv-cyan-bright);
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-family: var(--cv-font-sans);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.demo-fill-btn:hover {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: var(--cv-cyan);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+}
+
+.demo-fill-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Autofill flash animation */
+@keyframes cvAutofillFlash {
+  0% { border-color: var(--cv-cyan-bright); box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.4); }
+  100% { border-color: var(--cv-border-subtle); box-shadow: none; }
+}
+
+.autofill-flash {
+  animation: cvAutofillFlash 1.2s ease-out;
+}
+
+/* ---------------------------------------------------------------------
+   CARD FOOTER
+   --------------------------------------------------------------------- */
+.card-bottom-footer {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--cv-text-muted);
+}
+
+.card-bottom-footer .tech-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--cv-font-mono);
+  font-size: 10.5px;
+}
+
+.card-bottom-footer .edition-badge {
+  color: var(--cv-text-secondary);
+}
+
+.card-bottom-footer .brand-mark {
+  color: var(--cv-text-dim);
+  font-size: 10px;
+}
+
+/* =====================================================================
+   KEYFRAME ANIMATIONS
+   ===================================================================== */
+@keyframes cvFadeDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cvFadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cvFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cvCardEntrance {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes cvDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+@keyframes cvStatusGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.4); }
+}
+
+@keyframes cvScanSweep {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes cvRadarPing {
+  0% { r: 4; opacity: 0.9; stroke-width: 2; }
+  100% { r: 24; opacity: 0; stroke-width: 0.5; }
+}
+
+@keyframes cvDataFlow {
+  from { stroke-dashoffset: 200; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes cvSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* =====================================================================
+   RESPONSIVE LAYOUT
+   ===================================================================== */
+@media (max-width: 1140px) {
+  .login-visual-panel {
+    flex: 0 0 52%;
+    max-width: 52%;
+    padding: 36px 36px;
+  }
+  .login-form-panel {
+    flex: 0 0 48%;
+    max-width: 48%;
+    padding: 32px 32px;
+  }
+  .hero-main-title {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 920px) {
+  .login-split-page {
+    flex-direction: column;
+  }
+  .login-visual-panel {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 28px 24px 20px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .campus-schematic-card {
+    display: none; /* Hide heavy schematic on smaller screens for mobile ergonomics */
+  }
+  .hero-main-title {
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .hero-sub-text {
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .panel-center-hero {
+    margin: 16px 0 12px;
+  }
+  .panel-system-status {
+    padding-top: 14px;
+  }
+  .login-form-panel {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 24px 18px 40px;
+  }
+  .cv-glass-card {
+    padding: 26px 20px 22px;
+  }
+  .mobile-only-logo {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .demo-accounts-grid {
+    grid-template-columns: 1fr;
+  }
+  .cv-auth-tab {
+    font-size: 11px;
+    padding: 8px 4px;
+  }
+  .status-indicators-grid {
+    gap: 10px;
+  }
+  .status-indicator-item {
+    font-size: 10.5px;
+  }
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .campus-scan-line {
+    display: none;
+  }
+}

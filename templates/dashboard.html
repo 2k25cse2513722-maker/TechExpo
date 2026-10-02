@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSIT CampusVision AI — Command Center</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/styles.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="pass-2-theme">
+  
+  <!-- Subtle radial background lighting -->
+  <div class="bg-glow"></div>
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="toggleMobileSidebar(false)"></div>
+
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="appSidebar" aria-label="Main Navigation">
+      <div class="sidebar-top">
+        <div class="brand">
+          <div class="brand-title">CAMPUSVISION<br><span class="brand-ai">AI</span></div>
+          <div class="brand-subtitle">PSIT SMART CAMPUS</div>
+        </div>
+        
+        <nav class="nav-menu" role="navigation">
+          <div class="nav-section-title">MONITOR</div>
+          <a href="#dashboard" class="nav-item active" data-nav="dashboard" id="nav-dashboard">
+            <span class="nav-icon">📊</span> <span class="nav-text">Dashboard</span>
+          </a>
+          <a href="#digital-twin" class="nav-item" data-nav="digital-twin" id="nav-digital-twin">
+            <span class="nav-icon">🌐</span> <span class="nav-text">Campus Twin</span>
+            <span class="live-dot-mini" id="sidebarTwinDot"></span>
+          </a>
+          <a href="#heatmap" class="nav-item" data-nav="heatmap" id="nav-heatmap">
+            <span class="nav-icon">🗺️</span> <span class="nav-text">Smart Heatmap</span>
+          </a>
+          <a href="#emergency" class="nav-item nav-emergency-item" data-nav="emergency" id="nav-emergency">
+            <span class="nav-icon">🚨</span> <span class="nav-text">Emergency Mode</span>
+            <span class="nav-badge badge-danger" id="sidebarEmergencyBadge" style="display: none;">ALARM</span>
+          </a>
+          <a href="#classrooms" class="nav-item" data-nav="classrooms" id="nav-classrooms">
+            <span class="nav-icon">🏫</span> <span class="nav-text">Classrooms</span>
+            <span class="nav-badge" id="sidebarRoomsCount">-</span>
+          </a>
+          <a href="#camera" class="nav-item" data-nav="camera" id="nav-camera">
+            <span class="nav-icon">📹</span> <span class="nav-text">Live Camera</span>
+            <span class="live-dot-mini" id="sidebarCamDot" style="display: none;"></span>
+          </a>
+          <a href="#corridors" class="nav-item" data-nav="corridors" id="nav-corridors">
+            <span class="nav-icon">🚶</span> <span class="nav-text">Corridor Flow</span>
+          </a>
+          
+          <div class="nav-section-title">INTELLIGENCE</div>
+          <a href="#attendance" class="nav-item" data-nav="attendance" id="nav-attendance">
+            <span class="nav-icon">📋</span> <span class="nav-text">Attendance Portal</span>
+          </a>
+          <a href="#timetable" class="nav-item" data-nav="timetable" id="nav-timetable">
+            <span class="nav-icon">📅</span> <span class="nav-text">Faculty Timetable</span>
+          </a>
+          <a href="#students" class="nav-item" data-nav="students" id="nav-students">
+            <span class="nav-icon">👥</span> <span class="nav-text">Students</span>
+            <span class="nav-badge" id="sidebarStudentsCount">0</span>
+          </a>
+          <a href="#alerts" class="nav-item" data-nav="alerts" id="nav-alerts">
+            <span class="nav-icon">⚠️</span> <span class="nav-text">Campus Alerts</span>
+            <span class="nav-badge badge-warning" id="sidebarAlertsCount" style="display: none;">0</span>
+          </a>
+
+          <div class="nav-section-title">SYSTEM</div>
+          <a href="#reports" class="nav-item" data-nav="reports" id="nav-reports">
+            <span class="nav-icon">📄</span> <span class="nav-text">Reports & Logs</span>
+          </a>
+          <a href="#settings" class="nav-item" data-nav="settings" id="nav-settings">
+            <span class="nav-icon">⚙️</span> <span class="nav-text">Settings & System</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="user-profile" id="sidebarUserProfile" title="View Profile Info" onclick="navigateToSection('settings')">
+          <div class="user-avatar">
+            <div class="online-indicator"></div>
+            <span id="userAvatarChar">{% if user %}{{ user.name[0] }}{% else %}A{% endif %}</span>
+          </div>
+          <div class="user-details">
+            <div class="user-name" id="userNameLabel">{% if user %}{{ user.name }}{% else %}Campus Administrator{% endif %}</div>
+            <div class="user-role" id="userRoleLabel">{% if user %}{{ user.role | upper }}{% else %}ADMIN{% endif %}</div>
+          </div>
+        </div>
+        <a href="/logout" class="btn-logout" id="btnLogout" aria-label="Log out of CampusVision">
+          <span>⏻</span> Sign Out
+        </a>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <!-- HEADER -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="mobile-menu-btn" id="btnMobileMenu" onclick="toggleMobileSidebar()" aria-label="Toggle navigation menu">
+            ☰
+          </button>
+          <div class="breadcrumb" id="appBreadcrumb">
+            <span class="crumb-highlight" id="crumbParent">Campus Overview</span> 
+            <span class="separator">/</span> 
+            <span id="crumbCurrent">Dashboard</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="live-badge" id="systemOnlineBadge">● SYSTEM ONLINE</div>
+          <div id="liveClock" class="clock">--:--:--</div>
+          
+          <button class="icon-btn" id="btnExportHeader" title="Quick CSV Export" onclick="exportAttendanceCSV()" aria-label="Export Attendance CSV">
+            📥
+          </button>
+          <button class="icon-btn" id="btnRefreshAll" title="Refresh Telemetry" onclick="fetchDashboardData(true)" aria-label="Refresh Data">
+            🔄
+          </button>
+          <a href="#settings" class="user-avatar-small" title="Settings / Profile" aria-label="User profile">
+            👤
+          </a>
+        </div>
+      </header>
+
+      <div class="scrollable-content">
+        
+        <!-- =========================================================
+             SECTION 1: DASHBOARD (OVERVIEW)
+             ========================================================= -->
+        <section id="section-dashboard" class="dashboard-section active">
+          <!-- HERO SECTION -->
+          <div class="hero-section">
+            <div class="hero-left">
+              <div class="hero-eyebrow">PSIT CAMPUS / COMPUTER VISION</div>
+              <h1 class="hero-title">CAMPUS<br>VISION AI</h1>
+              <h2 class="hero-subtitle-large">REAL-TIME CLASSROOM<br>INTELLIGENCE</h2>
+              <p class="hero-desc">Monitor classrooms, detect people and identify students in real time with YOLOv11 and FaceNet embeddings.</p>
+              <div class="hero-system-row">
+                <span class="sys-dot">● SYSTEM READY</span>
+                <span class="sys-tag">YOLOv11 Nano</span>
+                <span class="sys-tag">FaceNet MTCNN</span>
+                <span class="sys-tag camera-status-text">CAMERA OFFLINE</span>
+              </div>
+            </div>
+            <div class="hero-right">
+              <div id="ai-core-container"></div>
+              <div class="ai-core-label">
+                <div class="label-title">AI CORE ENGINE</div>
+                <div class="label-status" id="aiCoreStatusText">SYSTEM STANDBY</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMMAND BAR -->
+          <div class="command-bar">
+            <div class="cmd-left camera-status-text">● CAMERA OFFLINE</div>
+            <div class="cmd-center">
+              <span class="cmd-telemetry">MODEL <strong>YOLOv11 Nano</strong></span>
+              <span class="cmd-telemetry">FACE ENGINE <strong>FaceNet 512-D</strong></span>
+              <span class="cmd-telemetry">DEVICE <strong>HARDWARE ACCELERATED</strong></span>
+            </div>
+            <div class="cmd-right">
+              <button id="btnStartCamera" onclick="startCamera()" class="btn-primary" aria-label="Start Camera Stream">▶ START CAMERA</button>
+              <button id="btnStopCamera" onclick="stopCamera()" class="btn-danger" style="display: none;" aria-label="Stop Camera Stream">■ STOP CAMERA</button>
+              <button class="btn-secondary" onclick="navigateToSection('camera')" aria-label="Open Full Camera View">📺 CAMERA VIEW</button>
+            </div>
+          </div>
+
+          <!-- KPI SECTION (CLICKABLE METRICS) -->
+          <div class="kpi-grid">
+            <div class="kpi-card clickable" onclick="navigateToSection('classrooms')" tabindex="0" role="button" aria-label="View Classrooms Monitoring">
+              <div class="kpi-label">CAMPUS OCCUPANCY</div>
+              <div class="kpi-value" id="kpiTotalPeople">0</div>
+              <div class="kpi-viz">LIVE DETECTION <span class="spark-line">───────╱────</span></div>
+              <div class="kpi-action-hint">Click for Classrooms →</div>
+            </div>
+            
+            <div class="kpi-card clickable" onclick="navigateToSection('classrooms', 'occupied')" tabindex="0" role="button" aria-label="View Active Classrooms">
+              <div class="kpi-label">ACTIVE ROOMS</div>
+              <div class="kpi-value" id="kpiActiveRooms">0</div>
+              <div class="kpi-viz">CAMPUS MONITOR <span class="spark-line">────╲───╱───</span></div>
+              <div class="kpi-action-hint">Filter Active Rooms →</div>
+            </div>
+
+            <div class="kpi-card clickable" onclick="navigateToSection('classrooms', 'empty')" tabindex="0" role="button" aria-label="View Empty Classrooms">
+              <div class="kpi-label">EMPTY ROOMS</div>
+              <div class="kpi-value" id="kpiEmptyRooms">0</div>
+              <div class="kpi-viz text-dim">FREE SLOTS <span class="spark-line">────────────</span></div>
+              <div class="kpi-action-hint">Filter Empty Slots →</div>
+            </div>
+
+            <div class="kpi-card clickable" onclick="navigateToSection('attendance')" tabindex="0" role="button" aria-label="View Attendance Portal">
+              <div class="kpi-label">TODAY'S ATTENDANCE</div>
+              <div class="kpi-value" id="kpiAttendancePct">0%</div>
+              <div class="kpi-viz">PRESENT: <span id="kpiPresentCount">0</span> / <span id="kpiTotalStudents">0</span></div>
+              <div class="kpi-action-hint">Open Attendance Portal →</div>
+            </div>
+
+            <div class="kpi-card clickable" onclick="navigateToSection('attendance', 'absent')" tabindex="0" role="button" aria-label="View Absent Students">
+              <div class="kpi-label">ABSENT TODAY</div>
+              <div class="kpi-value text-amber" id="kpiAbsentCount">0</div>
+              <div class="kpi-viz text-dim">STUDENTS OFF-CAMPUS</div>
+              <div class="kpi-action-hint">Inspect Absent Roster →</div>
+            </div>
+
+            <div class="kpi-card clickable" onclick="navigateToSection('corridors')" tabindex="0" role="button" aria-label="View Corridor Flow">
+              <div class="kpi-label">CORRIDOR FOOTFALL</div>
+              <div class="kpi-value" id="kpiCorridorPeople">0</div>
+              <div class="kpi-viz text-cyan">SAFETY MONITOR</div>
+              <div class="kpi-action-hint">View Corridor Flow →</div>
+            </div>
+
+            <div class="kpi-card clickable" onclick="navigateToSection('alerts')" tabindex="0" role="button" aria-label="View Active Alerts">
+              <div class="kpi-label">ACTIVE ALERTS</div>
+              <div class="kpi-value" id="kpiActiveAlerts" style="color: var(--accent-amber);">0</div>
+              <div class="kpi-viz text-amber" id="kpiAlertsSubtitle">NO HAZARDS</div>
+              <div class="kpi-action-hint">View Alert Feed →</div>
+            </div>
+
+            <div class="kpi-card clickable" onclick="navigateToSection('students')" tabindex="0" role="button" aria-label="View Student Directory">
+              <div class="kpi-label">ENROLLED STUDENTS</div>
+              <div class="kpi-value" id="kpiEnrolledStudents">0</div>
+              <div class="kpi-viz text-green">FACENET EMBEDDINGS</div>
+              <div class="kpi-action-hint">Manage Student Roster →</div>
+            </div>
+          </div>
+
+          <!-- =========================================================
+               LIVE CAMPUS COMMAND HUB (DIGITAL TWIN, HEATMAP, EMERGENCY)
+               ========================================================= -->
+          <div class="panel live-campus-panel mt-6" id="liveCampusHub">
+            <div class="panel-header live-campus-header">
+              <div class="live-campus-header-left">
+                <div class="live-campus-title-row">
+                  <h2>LIVE CAMPUS COMMAND</h2>
+                  <span class="live-beacon-tag" id="liveCampusModeBadge">● 3D TWIN ACTIVE</span>
+                </div>
+                <!-- Quick Status Strip -->
+                <div class="campus-sub-status-row" id="campusQuickStatusPills">
+                  <span class="quick-pill" id="pill-A-101" onclick="focusTwinRoom('A-101')" title="Click to focus 3D twin">A-101 <span class="qdot qgreen">●</span> <strong id="pillCount-A-101">42/60</strong></span>
+                  <span class="quick-pill" id="pill-A-102" onclick="focusTwinRoom('A-102')" title="Click to focus 3D twin">A-102 <span class="qdot qamber">●</span> <strong id="pillCount-A-102">42/60</strong></span>
+                  <span class="quick-pill" id="pill-B-201" onclick="focusTwinRoom('B-201')" title="Click to focus 3D twin">B-201 <span class="qdot qgreen">●</span> <strong id="pillCount-B-201">0/50</strong></span>
+                  <span class="quick-pill" id="pill-AI-Lab" onclick="focusTwinRoom('AI-Lab')" title="Click to focus 3D twin">AI-Lab <span class="qdot qamber">●</span> <strong id="pillCount-AI-Lab">36/40</strong></span>
+                  <span class="quick-pill" id="pill-Auditorium" onclick="focusTwinRoom('Auditorium')" title="Click to focus 3D twin">Auditorium <span class="qdot qamber">●</span> <strong id="pillCount-Auditorium">115/250</strong></span>
+                  <span class="quick-pill" id="pill-Corridor" onclick="focusTwinRoom('C-1')" title="Click to focus 3D twin">Corridors <span class="qdot qred">●</span> <strong id="pillCount-Corridor">30 Ppl</strong></span>
+                </div>
+              </div>
+
+              <div class="live-campus-actions">
+                <!-- View Switcher Tabs -->
+                <div class="twin-view-selector" role="tablist">
+                  <button class="twin-tab-btn active" id="tabBtnDigitalTwin" onclick="switchLiveCampusView('twin')">🌐 Digital Twin (3D)</button>
+                  <button class="twin-tab-btn" id="tabBtnHeatmap" onclick="switchLiveCampusView('heatmap')">🗺️ Smart Heatmap</button>
+                  <button class="twin-tab-btn emergency-tab-btn" id="tabBtnEmergency" onclick="switchLiveCampusView('emergency')">🚨 Emergency Mode</button>
+                </div>
+
+                <!-- Safe Demo Mode for TechExpo -->
+                <button class="btn-demo-mode" id="btnDemoModeToggle" onclick="openDemoModeModal()" title="Safe Demo Mode for TechExpo presentation">
+                  <span class="demo-icon">🎛️</span> <span id="demoModeBtnLabel">DEMO MODE</span>
+                </button>
+
+                <!-- Emergency Mode CTA -->
+                <button class="btn-danger-emergency" id="btnActivateEmergencyCTA" onclick="promptActivateEmergency()">
+                  🚨 ACTIVATE EMERGENCY MODE
+                </button>
+                <button class="btn-exit-emergency" id="btnExitEmergencyCTA" style="display: none;" onclick="promptExitEmergency()">
+                  🛡️ EXIT EMERGENCY MODE
+                </button>
+              </div>
+            </div>
+
+            <!-- VIEW 1: 3D CAMPUS DIGITAL TWIN -->
+            <div class="live-campus-body" id="view-digital-twin">
+              <div class="twin-viewport-wrap">
+                <div class="twin-canvas-container" id="campus-twin-canvas-container">
+                  <!-- Three.js Canvas renders here -->
+                </div>
+
+                <!-- 3D Viewport Floating Overlay Controls -->
+                <div class="twin-floating-overlay-top">
+                  <div class="twin-hud-badge">
+                    <span class="hud-pulse"></span> INTERACTIVE 3D TWIN &bull; CLICK ROOM TO INSPECT
+                  </div>
+                  <div class="twin-cam-presets">
+                    <button class="btn-twin-cam" onclick="CampusTwin.resetCamera()">Overview</button>
+                    <button class="btn-twin-cam" onclick="CampusTwin.focusOnRoom('A-101')">Block A (A-101)</button>
+                    <button class="btn-twin-cam" onclick="CampusTwin.focusOnRoom('B-201')">Block B (B-201)</button>
+                    <button class="btn-twin-cam" onclick="CampusTwin.focusOnRoom('AI-Lab')">AI Lab</button>
+                    <button class="btn-twin-cam" onclick="CampusTwin.focusOnRoom('Auditorium')">Auditorium</button>
+                    <button class="btn-twin-cam" onclick="CampusTwin.focusOnRoom('C-1')">Corridors</button>
+                  </div>
+                </div>
+
+                <div class="twin-floating-legend">
+                  <div class="legend-item"><span class="legend-dot green"></span> Low (0–40%)</div>
+                  <div class="legend-item"><span class="legend-dot yellow"></span> Med (40–75%)</div>
+                  <div class="legend-item"><span class="legend-dot red"></span> High (75–100%)</div>
+                  <div class="legend-item"><span class="legend-dot purple"></span> Overcapacity (&gt;100%)</div>
+                  <div class="legend-item"><span class="legend-dot slate"></span> Camera Offline</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 2: SMART CAMPUS HEATMAP -->
+            <div class="live-campus-body" id="view-smart-heatmap" style="display: none;">
+              <div class="heatmap-panel-content p-4">
+                <div class="heatmap-header-strip">
+                  <div>
+                    <h3>CAMPUS REAL-TIME DENSITY HEATMAP</h3>
+                    <p class="text-dim">Spatial occupancy density calculated from YOLO person counts against architectural seating thresholds.</p>
+                  </div>
+                  <div class="heatmap-legend-scale">
+                    <span class="scale-label">DENSITY SCALE:</span>
+                    <div class="scale-bar">
+                      <span class="scale-step step-low">LOW (0–40%)</span>
+                      <span class="scale-step step-med">MEDIUM (40–75%)</span>
+                      <span class="scale-step step-high">HIGH (75–100%)</span>
+                      <span class="scale-step step-over">OVERCAPACITY (&gt;100%)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Interactive Heatmap SVG / Grid Layout -->
+                <div class="heatmap-map-visualizer" id="heatmapZonesContainer">
+                  <!-- Rendered dynamically with hover/click tooltips -->
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 3: EMERGENCY / EVACUATION DASHBOARD -->
+            <div class="live-campus-body" id="view-emergency-mode" style="display: none;">
+              <div class="emergency-dashboard-content p-4">
+                <!-- 🚨 EMERGENCY ALARM BANNER -->
+                <div class="emergency-alarm-banner">
+                  <div class="alarm-left">
+                    <div class="alarm-siren-icon">🚨</div>
+                    <div>
+                      <div class="alarm-title">EMERGENCY / EVACUATION AWARENESS MODE ACTIVE</div>
+                      <div class="alarm-subtitle">Situational Crowd Management &bull; Real-time AI Vision Feeds &bull; Safe Evacuation Guidance</div>
+                    </div>
+                  </div>
+                  <div class="alarm-right">
+                    <button class="btn-exit-emergency large" onclick="promptExitEmergency()">🛡️ EXIT EMERGENCY MODE</button>
+                  </div>
+                </div>
+
+                <!-- EMERGENCY KPI CARDS -->
+                <div class="emergency-kpi-grid mt-4">
+                  <div class="ekpi-card">
+                    <div class="ekpi-label">CAMPUS OCCUPANCY</div>
+                    <div class="ekpi-val text-red" id="emergTotalOccupancy">0</div>
+                    <div class="ekpi-sub">Total detected persons</div>
+                  </div>
+                  <div class="ekpi-card">
+                    <div class="ekpi-label">KNOWN / DETECTED PEOPLE</div>
+                    <div class="ekpi-val text-green" id="emergKnownPeople">0</div>
+                    <div class="ekpi-sub">Verified Identities</div>
+                  </div>
+                  <div class="ekpi-card">
+                    <div class="ekpi-label">UNIDENTIFIED / UNRESOLVED</div>
+                    <div class="ekpi-val text-amber" id="emergUnidentifiedPeople">0</div>
+                    <div class="ekpi-sub">Neutral classification</div>
+                  </div>
+                  <div class="ekpi-card">
+                    <div class="ekpi-label">ACTIVE CAMERAS</div>
+                    <div class="ekpi-val text-cyan" id="emergActiveCameras">24 / 25</div>
+                    <div class="ekpi-sub">Optical Network Health</div>
+                  </div>
+                </div>
+
+                <!-- EMERGENCY 2-COL GRID -->
+                <div class="emergency-grid-split mt-4">
+                  <!-- LEFT: Live Occupancy by Location & Evacuation Map -->
+                  <div class="emergency-col-left">
+                    <div class="panel inner-panel">
+                      <div class="panel-header">
+                        <h2>LIVE OCCUPANCY BY LOCATION</h2>
+                        <span class="panel-badge badge-warning">CURRENT DETECTIONS</span>
+                      </div>
+                      <div class="p-4" id="emergLocationOccupancyList">
+                        <!-- Location rows rendered dynamically -->
+                      </div>
+                    </div>
+
+                    <div class="panel inner-panel mt-4">
+                      <div class="panel-header">
+                        <h2>EVACUATION ROUTES &amp; EMERGENCY EXITS</h2>
+                        <span class="panel-badge">STATIC / DEMO ROUTE CONFIGURATION</span>
+                      </div>
+                      <div class="p-4" id="emergEvacuationRoutesList">
+                        <!-- Evacuation routes rendered dynamically -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- RIGHT: Last Known Locations & Camera Health -->
+                  <div class="emergency-col-right">
+                    <div class="panel inner-panel">
+                      <div class="panel-header">
+                        <h2>LAST KNOWN VERIFIED LOCATIONS</h2>
+                        <span class="panel-badge">ROLE-AUTHORIZED VIEW</span>
+                      </div>
+                      <div class="p-4 table-responsive">
+                        <table class="data-table" id="emergLastKnownTable">
+                          <thead>
+                            <tr>
+                              <th>Student / Person</th>
+                              <th>Last Known Location</th>
+                              <th>Last Detection Time</th>
+                              <th>Camera</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody id="emergLastKnownBody">
+                            <!-- Rows rendered dynamically -->
+                          </tbody>
+                        </table>
+                        <div class="privacy-notice mt-2">
+                          🔒 <em>Privacy Protocol: Sensitive biometrics restricted to authorized personnel. Unresolved detections are neutrally classified as Unidentified.</em>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="panel inner-panel mt-4">
+                      <div class="panel-header">
+                        <h2>SURVEILLANCE CAMERA HEALTH</h2>
+                        <span class="panel-badge" id="emergCameraOfflineBadge">1 Camera Offline</span>
+                      </div>
+                      <div class="p-4" id="emergCameraHealthList">
+                        <!-- Camera health items rendered dynamically -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SMART CAMPUS INSIGHTS SECTION -->
+            <div class="campus-insights-strip border-top p-4">
+              <div class="insights-strip-header">
+                <div class="strip-title-left">
+                  <span class="insights-icon">💡</span>
+                  <h3>SMART CAMPUS INSIGHTS</h3>
+                  <span class="panel-badge" id="insightsCountBadge">Real-time Observations</span>
+                </div>
+                <div class="text-dim text-xs">Automated comparisons between live occupancy, capacities, timetables &amp; corridor limits</div>
+              </div>
+              <div class="insights-cards-scroller mt-3" id="campusInsightsList">
+                <div class="skeleton-loader">Evaluating campus telemetry...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MAIN 70/30 GRID -->
+          <div class="monitoring-grid-70-30">
+            <!-- LEFT COL: CAMERA FEED & CLASSROOM OCCUPANCY -->
+            <div class="col-70">
+              <div class="panel">
+                <div class="panel-header">
+                  <div class="panel-header-title">
+                    <h2>LIVE MONITORING</h2>
+                    <span class="panel-badge">FEED 01</span>
+                  </div>
+                  <div class="panel-actions">
+                    <button class="btn-xs" onclick="navigateToSection('camera')">EXPAND VIEW</button>
+                    <button class="btn-xs btn-outline" onclick="toggleFullscreen('mainVideoContainer')">⛶ FULLSCREEN</button>
+                  </div>
+                </div>
+                <div class="video-panel" id="mainVideoContainer">
+                  <div class="video-overlay-top">
+                    <div class="overlay-left">
+                      <div class="camera-title">CAMERA 01 &bull; ROOM A-101</div>
+                      <div class="camera-subtitle">CS-601: Computer Vision & AI</div>
+                    </div>
+                    <div class="overlay-right">
+                      <span class="live-dot-container" style="display: none;"><span class="pulse-dot"></span> LIVE</span>
+                    </div>
+                  </div>
+
+                  <div class="video-container">
+                    <div id="cameraPlaceholder" class="elegant-empty-state">
+                      <div class="empty-icon">◷</div>
+                      <div class="empty-title">CAMERA OFFLINE</div>
+                      <div class="empty-desc">Start the camera to begin real-time classroom monitoring and face recognition.</div>
+                      <div class="camera-actions-row mt-4">
+                        <button onclick="startCamera()" class="btn-primary">▶ START HARDWARE CAMERA</button>
+                        <button onclick="startBrowserCamera()" class="btn-primary-outline">🌐 USE BROWSER WEBCAM</button>
+                      </div>
+                    </div>
+                    <img id="cctvStreamImg" src="" alt="Live Stream" style="display: none;">
+                  </div>
+                  
+                  <div class="video-overlay-bottom">
+                    <div class="engine-status"><span class="indicator yolo-ind"></span> PERSON DETECTION</div>
+                    <div class="engine-status"><span class="indicator face-ind"></span> FACE DETECTION</div>
+                    <div class="engine-status"><span class="indicator ai-ind active"></span> AI ENGINE ACTIVE</div>
+                  </div>
+                </div>
+
+                <!-- TELEMETRY STRIP -->
+                <div class="telemetry-strip">
+                  <div class="tel-item"><span class="tel-label">MODEL</span><span class="tel-val">YOLOv11 Nano</span></div>
+                  <div class="tel-item"><span class="tel-label">DEVICE</span><span class="tel-val">AUTOMATIC</span></div>
+                  <div class="tel-item"><span class="tel-label">FPS</span><span class="tel-val" id="telFps">--</span></div>
+                  <div class="tel-item"><span class="tel-label">PEOPLE</span><span class="tel-val" id="telPeople">--</span></div>
+                  <div class="tel-item"><span class="tel-label">FACES</span><span class="tel-val" id="telFaces">--</span></div>
+                </div>
+              </div>
+              
+              <!-- CLASSROOM OCCUPANCY PREVIEW -->
+              <div class="panel mt-6">
+                <div class="panel-header">
+                  <div class="panel-header-title">
+                    <h2>CLASSROOM OCCUPANCY SNAPSHOT</h2>
+                    <span class="panel-badge" id="badgeRoomCount">Monitored Rooms</span>
+                  </div>
+                  <button class="btn-xs btn-outline" onclick="navigateToSection('classrooms')">VIEW ALL CLASSROOMS →</button>
+                </div>
+                <div class="occupancy-list" id="occupancyList">
+                  <div class="skeleton-loader p-4">Loading occupancy data...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT COL: AI DETECTION & CURRENT CLASS -->
+            <div class="col-30">
+              <div class="panel detection-panel">
+                <div class="panel-header">
+                  <div>
+                    <h2>AI DETECTION</h2>
+                    <div class="panel-subtitle">REAL-TIME FACE ANALYSIS</div>
+                  </div>
+                  <button class="btn-xs" onclick="navigateToSection('attendance')">ROSTER</button>
+                </div>
+                
+                <div class="detection-section">
+                  <h3 class="section-title">RECOGNIZED STUDENTS <span class="count" id="badgeRecognized">0</span></h3>
+                  <div class="detection-list" id="recognizedList">
+                    <div class="elegant-empty-state small">
+                      <div class="empty-icon">⚲</div>
+                      <div class="empty-title">NO ACTIVE DETECTIONS</div>
+                      <div class="empty-desc">Waiting for camera input...</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="detection-section border-top">
+                  <h3 class="section-title">UNKNOWN PERSONS <span class="count" id="badgeUnknown">0</span></h3>
+                  <div class="detection-list" id="unknownList">
+                    <div class="elegant-empty-state small">
+                      <div class="empty-title">NO UNKNOWN PERSONS</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SYSTEM STATUS -->
+              <div class="panel mt-6">
+                <div class="panel-header">
+                  <h2>SYSTEM STATUS</h2>
+                  <span class="status-pill status-normal">HEALTHY</span>
+                </div>
+                <div class="status-list p-4">
+                  <div class="status-row"><span class="s-label">AI ENGINE</span><span class="s-val text-green" id="sysAiStatus">READY</span></div>
+                  <div class="status-row"><span class="s-label">CAMERA</span><span class="s-val camera-status-text" id="sysCamStatus">OFFLINE</span></div>
+                  <div class="status-row"><span class="s-label">FACE ENGINE</span><span class="s-val text-green">READY</span></div>
+                  <div class="status-row"><span class="s-label">DATABASE</span><span class="s-val text-green">CONNECTED</span></div>
+                </div>
+              </div>
+
+              <!-- CURRENT CLASS -->
+              <div class="panel mt-6">
+                <div class="panel-header">
+                  <h2>CURRENT SCHEDULED CLASS</h2>
+                  <button class="btn-xs btn-outline" onclick="navigateToSection('timetable')">TIMETABLE →</button>
+                </div>
+                <div class="class-info p-4" id="currentClassInfo">
+                  <div class="elegant-empty-state small">Loading timetable...</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- =========================================================
+             SECTION 2: CLASSROOM MONITORING
+             ========================================================= -->
+        <section id="section-classrooms" class="dashboard-section">
+          <div class="section-page-header">
+            <div class="section-page-title">
+              <h1>Classroom Monitoring</h1>
+              <p>Live occupancy telemetry, capacity tracking, and anomaly verification across all campus blocks.</p>
+            </div>
+            <div class="section-page-actions">
+              <div class="search-input-wrapper">
+                <input type="text" id="classroomSearchInput" placeholder="Search room, faculty, subject..." oninput="filterClassroomsUI()" class="form-input search-input">
+              </div>
+              <button class="btn-primary" onclick="openAddRoomModal()">+ ADD ROOM SCHEDULE</button>
+            </div>
+          </div>
+
+          <!-- FILTER TABS -->
+          <div class="filter-tab-bar">
+            <button class="filter-tab active" data-filter="all" onclick="setClassroomFilter('all')">All Classrooms (<span id="countFilterAll">0</span>)</button>
+            <button class="filter-tab" data-filter="occupied" onclick="setClassroomFilter('occupied')">Occupied (<span id="countFilterOccupied">0</span>)</button>
+            <button class="filter-tab" data-filter="empty" onclick="setClassroomFilter('empty')">Empty (<span id="countFilterEmpty">0</span>)</button>
+            <button class="filter-tab" data-filter="high" onclick="setClassroomFilter('high')">High Occupancy &gt;80% (<span id="countFilterHigh">0</span>)</button>
+          </div>
+
+          <!-- CLASSROOM CARDS GRID -->
+          <div class="classrooms-cards-grid" id="classroomsGrid">
+            <div class="skeleton-card">Loading classrooms...</div>
+          </div>
+        </section>
+
+        <!-- =========================================================
+             SECTION 3: ATTENDANCE PORTAL
+             ========================================================= -->
+        <section id="section-attendance" class="dashboard-section">
+          <div class="section-page-header">
+            <div class="section-page-title">
+              <h1>Attendance Portal</h1>
+              <p>Complete biometric & manual attendance logging system with date history, filters, and persistence.</p>
+            </div>
+            <div class="section-page-actions">
+              <div class="search-input-wrapper">
+                <input type="date" id="attendanceDateFilter" class="form-input" onchange="fetchAttendancePortalData()">
+              </div>
+              <button class="btn-primary" onclick="fetchAttendancePortalData(true)">🔄 REFRESH ROSTER</button>
+              <a href="/api/reports/export-csv" class="btn-secondary" download>📥 EXPORT ATTENDANCE</a>
+            </div>
+          </div>
+
+          <!-- ATTENDANCE KPI METRICS -->
+          <div class="kpi-grid mb-6">
+            <div class="kpi-card">
+              <div class="kpi-label">TOTAL STUDENTS</div>
+              <div class="kpi-value" id="attPortalTotalStudents">0</div>
+              <div class="kpi-viz">ENROLLED ROSTER</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">PRESENT TODAY</div>
+              <div class="kpi-value text-green" id="attPortalPresent">0</div>
+              <div class="kpi-viz text-green">VERIFIED PRESENT</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">ABSENT TODAY</div>
+              <div class="kpi-value text-amber" id="attPortalAbsent">0</div>
+              <div class="kpi-viz text-amber">OFF-CAMPUS</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">ATTENDANCE RATE</div>
+              <div class="kpi-value text-cyan" id="attPortalRate">0%</div>
+              <div class="kpi-viz">OVERALL COMPLIANCE</div>
+            </div>
+          </div>
+
+          <!-- ATTENDANCE FILTER BAR -->
+          <div class="filter-tab-bar" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 8px;">
+              <button class="filter-tab active" data-filter="all" onclick="setAttendanceFilter('all')">All (<span id="attFilterAllCount">0</span>)</button>
+              <button class="filter-tab" data-filter="present" onclick="setAttendanceFilter('present')">Present (<span id="attFilterPresentCount">0</span>)</button>
+              <button class="filter-tab" data-filter="absent" onclick="setAttendanceFilter('absent')">Absent (<span id="attFilterAbsentCount">0</span>)</button>
+            </div>
+            <div class="search-input-wrapper" style="min-width: 240px;">
+              <input type="text" id="attendanceSearchInput" placeholder="Search by student name or ID..." oninput="filterAttendanceUI()" class="form-input search-input">
+            </div>
+          </div>
+
+          <div class="panel mt-4">
+            <div class="panel-header">
+              <h2>STUDENT ATTENDANCE LOG — <span id="attendanceCurrentDateDisplay" class="text-cyan">TODAY</span></h2>
+              <span class="panel-badge" id="attPortalStatusBadge">Live Synchronized</span>
+            </div>
+            <div class="p-4 table-responsive">
+              <table class="data-table" id="attendancePortalTable">
+                <thead>
+                  <tr>
+                    <th>Student Photo</th>
+                    <th>Name</th>
+                    <th>College ID</th>
+                    <th>Date</th>
+                    <th>First Seen (Time In)</th>
+                    <th>Last Seen</th>
+                    <th>Status</th>
+                    <th>Manual Action</th>
+                  </tr>
+                </thead>
+                <tbody id="attendancePortalTableBody">
+                  <tr><td colspan="8" class="text-center p-4">Loading attendance records...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================
+             SECTION 4: LIVE CAMERA MONITORING
+             ========================================================= -->
+        <section id="section-camera" class="dashboard-section">
+          <div class="section-page-header">
+            <div class="section-page-title">
+              <h1>Integrated AI Camera Feed</h1>
+              <p>Direct video telemetry, YOLOv11 person bounding boxes, and FaceNet facial identification.</p>
+            </div>
+            <div class="section-page-actions">
+              <button class="btn-secondary" onclick="navigateToSection('dashboard')">← Back to Dashboard</button>
+              <button class="btn-outline" onclick="toggleFullscreen('liveCameraExpandedPanel')">⛶ Fullscreen</button>
+              <button id="btnCameraSecStart" class="btn-primary" onclick="startCamera()">▶ Start Camera</button>
+              <button id="btnCameraSecStop" class="btn-danger" style="display: none;" onclick="stopCamera()">■ Stop Camera</button>
+            </div>
+          </div>
+
+          <div class="monitoring-grid-70-30" id="liveCameraExpandedPanel">
+            <div class="col-70">
+              <div class="panel">
+                <div class="panel-header">
+                  <div class="panel-header-title">
+                    <h2>CCTV FEED &bull; ROOM A-101</h2>
+                    <span class="live-dot-container camera-live-indicator" style="display: none;"><span class="pulse-dot"></span> STREAM ONLINE</span>
+                  </div>
+                  <div class="camera-toolbar">
+                    <button class="btn-xs btn-outline" onclick="reloadCameraStream()" title="Reload Stream">🔄 Reconnect</button>
+                    <button class="btn-xs btn-outline" onclick="startBrowserCamera()" title="Switch to Browser Webcam">🌐 Webcam</button>
+                    <button class="btn-xs btn-outline" onclick="toggleFullscreen('liveCameraExpandedPanel')" title="Toggle Fullscreen">⛶ Fullscreen</button>
+                  </div>
+                </div>
+
+                <div class="video-panel large-video-panel">
+                  <div class="video-container" id="cameraExpandedContainer">
+                    <div id="cameraExpandedPlaceholder" class="elegant-empty-state">
+                      <div class="empty-icon">📹</div>
+                      <div class="empty-title">CAMERA STREAM READY</div>
+                      <div class="empty-desc">Click Start Camera to initialize video detection loop.</div>
+                      <div class="camera-actions-row mt-4">
+                        <button onclick="startCamera()" class="btn-primary">▶ START CAMERA ENGINE</button>
+                        <button onclick="startBrowserCamera()" class="btn-primary-outline">🌐 USE LAPTOP WEBCAM</button>
+                      </div>
+                    </div>
+                    <img id="cctvExpandedStreamImg" src="" alt="Live Video Feed" style="display: none; width: 100%; height: 100%; object-fit: contain;">
+                  </div>
+                </div>
+
+                <div class="telemetry-strip">
+                  <div class="tel-item"><span class="tel-label">STATUS</span><span class="tel-val camera-status-text">OFFLINE</span></div>
+                  <div class="tel-item"><span class="tel-label">PEOPLE COUNT</span><span class="tel-val" id="camSecPeople">0</span></div>
+                  <div class="tel-item"><span class="tel-label">FACES COUNT</span><span class="tel-val" id="camSecFaces">0</span></div>
+                  <div class="tel-item"><span class="tel-label">DETECTION FPS</span><span class="tel-val" id="camSecFps">--</span></div>
+                  <div class="tel-item"><span class="tel-label">ROOM</span><span class="tel-val">A-101 (Main Lab)</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-30">
+              <div class="panel">
+                <div class="panel-header">
+                  <h2>CAMERA TELEMETRY &amp; AI RECOGNITION</h2>
+                </div>
+                <div class="p-4">
+                  <div class="detection-section">
+                    <h3 class="section-title">RECOGNIZED FACES</h3>
+                    <div class="detection-list" id="camSecRecognizedList">
+                      <div class="elegant-empty-state small">No recognized students yet.</div>
+                    </div>
+                  </div>
+
+                  <div class="detection-section border-top mt-4">
+                    <h3 class="section-title">UNKNOWN FACES</h3>
+                    <div class="detection-list" id="camSecUnknownList">
+                      <div class="elegant-empty-state small">No unknown faces.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================
+             SECTION 5: CORRIDOR MONITORING
+             ========================================================= -->
+        <section id="section-corridors" class="dashboard-section">
+          <div class="section-page-header">
+            <div class="section-page-title">
+              <h1>Corridor Footfall &amp; Safety Monitoring</h1>
+              <p>Real-time crowd flow analysis, safety thresholds, and congestion alert monitors across campus pathways.</p>
+            </div>
+            <div class="section-page-actions">
+              <button class="btn-primary" onclick="fetchDashboardData(true)">🔄 REFRESH CORRIDORS</button>
+            </div>
+          </div>
+
+          <div class="corridors-grid" id="corridorsGrid">
+            <div class="skeleton-card">Loading corridors data...</div>
+          </div>
+        </section>
+
+        <!-- =========================================================
+             SECTION 6: FACULTY TIMETABLE
+             ========================================================= -->
+        <section id="section-timetable" class="dashboard-section">
+          <div class="section-page-header">
+            <div class="section-page-title">
+              <h1>Faculty Timetable &amp; Cross-Verification</h1>
+              <p>Scheduled lectures cross-checked with live YOLO classroom detections to flag empty lectures or overcrowding.</p>
+            </div>
+            <div class="section-page-actions">
+              <button class="btn-primary" onclick="openAddTimetableModal()">+ ADD SCHEDULED LECTURE</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>TODAY'S SCHEDULED LECTURES &amp; LIVE AUDIT</h2>
+              <span class="panel-badge">CROSS-CHECKED WITH CCTV</span>
+            </div>
+            <div class="p-4 table-responsive">
+              <table class="data-table" id="timetableTable">
+                <thead>
+                  <tr>
+                    <th>Time Slot</th>
+                    <th>Room</th>
+                    <th>Subject</th>
+                    <th>Faculty</th>
+                    <th>Expected</th>
+                    <th>Live Detected</th>
+                    <th>Verification Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="timetableTableBody">
+                  <tr><td colspan="8" class="text-center p-4">Loading timetable schedule...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================
+             SECTION 7: CAMPUS ALERTS
+             ========================================================= -->
+        <section id="section-alerts" class="dashboard-section">
+          <div class="section-page-header">
+            <div class="section-page-title">
+              <h1>Campus Safety &amp; Anomaly Alerts</h1>
+              <p>Automated hazard evaluation for overcrowding, missed scheduled lectures, and corridor congestion.</p>
+            </div>
+            <div class="section-page-actions">
+              <button class="btn-primary" onclick="fetchAlertsData()">🔄 REFRESH ALERTS</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>ACTIVE CAMPUS ANOMALIES</h2>
+              <span class="panel-badge" id="alertsTotalBadge">0 Active</span>
+            </div>
+            <div class="alerts-feed-container p-4" id="alertsFeedContainer">
+              <div class="elegant-empty-state">
+                <div class="empty-icon">✅</div>
+                <div class="empty-title">ALL CLEAR</div>
+                <div class="empty-desc">No active campus anomalies or hazards detected.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================
+             SECTION 8: STUDENTS DIRECTORY
+             ========================================================= -->
+        <section id="section-students" class="dashboard-section">
+          <div class="section-page-header">
+            <div class="section-page-title">
+              <h1>Students Directory &amp; Biometric Database</h1>
+              <p>FaceNet facial database with photo enrollment, student management, and attendance records.</p>
+            </div>
+            <div class="section-page-actions">
+              <div class="search-input-wrapper">
+                <input type="text" id="studentsSearchInput" placeholder="Search by student name or ID..." oninput="filterStudentsUI()" class="form-input search-input">
+              </div>
+              <button class="btn-primary" onclick="openAddStudentModal()">+ ENROLL NEW STUDENT</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>ENROLLED STUDENTS DIRECTORY</h2>
+              <span class="panel-badge" id="badgeStudentCount">0 Students</span>
+            </div>
+            <div class="p-4 table-responsive">
+              <table class="data-table" id="studentsTable">
+                <thead>
+                  <tr>
+                    <th>Photo</th>
+                    <th>Student Name</th>
+                    <th>College ID</th>
+                    <th>Enrollment Date</th>
+                    <th>Biometric Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="studentsTableBody">
+                  <tr><td colspan="6" class="text-center p-4">Loading students...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================
+             SECTION 9: REPORTS & LOGS
+             ========================================================= -->
+        <section id="section-reports" class="dashboard-section">
+          <div class="section-page-header">
+            <div class="section-page-title">
+              <h1>Audit Reports &amp; Attendance Export</h1>
+              <p>Historical campus occupancy audit trail and CSV compliance reporting for college administration.</p>
+            </div>
+            <div class="section-page-actions">
+              <div class="search-input-wrapper">
+                <input type="text" id="reportsSearchInput" placeholder="Filter by room, faculty, subject..." oninput="filterReportsLogsUI()" class="form-input search-input">
+              </div>
+              <a href="/api/reports/export-csv" class="btn-primary" download>
+                📥 DOWNLOAD ATTENDANCE CSV
+              </a>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>HISTORICAL OCCUPANCY AUDIT TRAIL</h2>
+              <button class="btn-xs btn-outline" onclick="fetchOccupancyLogs()">🔄 Refresh Logs</button>
+            </div>
+            <div class="p-4 table-responsive">
+              <table class="data-table" id="reportsLogsTable">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Room / Zone</th>
+                    <th>Students Detected</th>
+                    <th>Capacity</th>
+                    <th>Occupancy %</th>
+                    <th>Status</th>
+                    <th>Assigned Faculty</th>
+                    <th>Scheduled Subject</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsLogsBody">
+                  <tr><td colspan="8" class="text-center p-4">Loading historical audit logs...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================
+             SECTION 10: SETTINGS & SYSTEM DIAGNOSTICS
+             ========================================================= -->
+        <section id="section-settings" class="dashboard-section">
+          <div class="section-page-header">
+            <div class="section-page-title">
+              <h1>System Settings &amp; Diagnostics</h1>
+              <p>Hardware configuration, AI model parameters, database integrity, and administrator profile.</p>
+            </div>
+            <div class="section-page-actions">
+              <button class="btn-primary" onclick="fetchSystemDiagnostics()">🔄 REFRESH DIAGNOSTICS</button>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>USER PROFILE</h2>
+              </div>
+              <div class="p-4" id="userProfileSettingsCard">
+                <div class="info-row"><span class="info-label">NAME</span><span class="info-val">{% if user %}{{ user.name }}{% else %}Administrator{% endif %}</span></div>
+                <div class="info-row"><span class="info-label">COLLEGE ID</span><span class="info-val">{% if user %}{{ user.college_id }}{% else %}PSIT001{% endif %}</span></div>
+                <div class="info-row"><span class="info-label">ROLE</span><span class="info-val">{% if user %}{{ user.role | upper }}{% else %}ADMIN{% endif %}</span></div>
+                <div class="info-row"><span class="info-label">DEPARTMENT</span><span class="info-val">{% if user %}{{ user.dept }}{% else %}Surveillance &amp; Academics{% endif %}</span></div>
+                <div class="mt-4">
+                  <a href="/logout" class="btn-danger" style="display: inline-block; text-decoration: none;">Sign Out Account</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h2>AI ENGINE SPECIFICATIONS</h2>
+              </div>
+              <div class="p-4" id="aiSpecsPanel">
+                <div class="info-row"><span class="info-label">OBJECT DETECTOR</span><span class="info-val text-cyan">YOLOv11 Nano (PyTorch)</span></div>
+                <div class="info-row"><span class="info-label">FACE DETECTOR</span><span class="info-val text-cyan">MTCNN Cascaded CNN</span></div>
+                <div class="info-row"><span class="info-label">FACE EMBEDDINGS</span><span class="info-val text-cyan">Inception ResNet (FaceNet 512-D)</span></div>
+                <div class="info-row"><span class="info-label">COSINE THRESHOLD</span><span class="info-val">0.80</span></div>
+                <div class="info-row"><span class="info-label">DATABASE</span><span class="info-val text-green">SQLite 3 (WAL Mode)</span></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h2>LIVE SYSTEM DIAGNOSTICS</h2>
+              </div>
+              <div class="p-4" id="diagnosticsLivePanel">
+                <div class="info-row"><span class="info-label">STATUS</span><span class="info-val text-green" id="diagStatus">ONLINE</span></div>
+                <div class="info-row"><span class="info-label">CAMERA DRIVER</span><span class="info-val" id="diagCamMsg">Standby</span></div>
+                <div class="info-row"><span class="info-label">KNOWN FACES LOADED</span><span class="info-val" id="diagFacesCount">0 Faces</span></div>
+                <div class="info-row"><span class="info-label">DATABASE TABLES</span><span class="info-val text-green" id="diagDbTables">Connected (8 Tables)</span></div>
+                <div class="info-row"><span class="info-label">HOST PLATFORM</span><span class="info-val" id="diagPlatform">--</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- =========================================================
+       UNIVERSAL DYNAMIC MODAL SYSTEM
+       ========================================================= -->
+  <div id="universalModal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content panel" id="universalModalContent">
+      <div class="panel-header">
+        <div class="modal-header-left">
+          <h2 id="modalTitle">MODAL TITLE</h2>
+          <span class="modal-badge" id="modalBadge" style="display: none;">INFO</span>
+        </div>
+        <button class="icon-btn close-btn" onclick="closeUniversalModal()" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-body p-4" id="modalBody">
+        <!-- Dynamic content injected by JavaScript -->
+      </div>
+      <div class="modal-footer p-4 border-top" id="modalFooter" style="display: none;">
+        <!-- Dynamic action buttons injected by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD STUDENT MODAL -->
+  <div id="addStudentModal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true">
+    <div class="modal-content panel">
+      <div class="panel-header">
+        <h2>ENROLL NEW STUDENT</h2>
+        <button class="icon-btn close-btn" onclick="closeAddStudentModal()" aria-label="Close add student modal">✕</button>
+      </div>
+      <div class="p-4">
+        <form id="enrollmentForm" onsubmit="submitEnrollment(event)">
+          <div class="form-group">
+            <label for="studentName">Student Full Name</label>
+            <input type="text" id="studentName" class="form-input" required placeholder="e.g. Aman Kumar">
+          </div>
+          <div class="form-group mt-4">
+            <label for="studentId">Student College ID</label>
+            <input type="text" id="studentId" class="form-input" required placeholder="e.g. PSIT001">
+          </div>
+          <div class="form-group mt-4">
+            <label for="studentPhoto">Clear Facial Photo (JPEG/PNG/WEBP)</label>
+            <input type="file" id="studentPhoto" class="form-input" accept="image/jpeg, image/png, image/webp" required>
+          </div>
+          <div class="form-actions mt-6" style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" class="btn-secondary" onclick="closeAddStudentModal()">CANCEL</button>
+            <button type="submit" class="btn-primary" id="btnEnrollSubmit">ENROLL STUDENT</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT STUDENT MODAL -->
+  <div id="editStudentModal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true">
+    <div class="modal-content panel">
+      <div class="panel-header">
+        <h2>EDIT STUDENT DETAILS</h2>
+        <button class="icon-btn close-btn" onclick="closeEditStudentModal()" aria-label="Close edit student modal">✕</button>
+      </div>
+      <div class="p-4">
+        <form id="editStudentForm" onsubmit="submitStudentEdit(event)">
+          <input type="hidden" id="editStudentIdHidden">
+          <div class="form-group">
+            <label for="editStudentIdDisplay">College ID</label>
+            <input type="text" id="editStudentIdDisplay" class="form-input" disabled>
+          </div>
+          <div class="form-group mt-4">
+            <label for="editStudentName">Student Full Name</label>
+            <input type="text" id="editStudentName" class="form-input" required placeholder="e.g. Aman Kumar">
+          </div>
+          <div class="form-actions mt-6" style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" class="btn-secondary" onclick="closeEditStudentModal()">CANCEL</button>
+            <button type="submit" class="btn-primary" id="btnEditStudentSubmit">SAVE CHANGES</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD TIMETABLE LECTURE MODAL -->
+  <div id="addTimetableModal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true">
+    <div class="modal-content panel">
+      <div class="panel-header">
+        <h2>ADD TIMETABLE LECTURE</h2>
+        <button class="icon-btn close-btn" onclick="closeAddTimetableModal()" aria-label="Close add timetable modal">✕</button>
+      </div>
+      <div class="p-4">
+        <form id="timetableForm" onsubmit="submitTimetableEntry(event)">
+          <div class="form-group">
+            <label for="ttFaculty">Faculty Name</label>
+            <input type="text" id="ttFaculty" class="form-input" required placeholder="e.g. Dr. Ananya Sharma">
+          </div>
+          <div class="form-group mt-4">
+            <label for="ttSubject">Subject &amp; Code</label>
+            <input type="text" id="ttSubject" class="form-input" required placeholder="e.g. CS-601: Computer Vision">
+          </div>
+          <div class="form-group mt-4">
+            <label for="ttRoom">Classroom / Lab</label>
+            <select id="ttRoom" class="form-input" required>
+              <option value="A-101">A-101 (Computer Vision Lab)</option>
+              <option value="A-102">A-102 (Lecture Hall)</option>
+              <option value="B-201">B-201 (Block B)</option>
+              <option value="AI-Lab">AI-Lab (Deep Learning Lab)</option>
+              <option value="Auditorium">Auditorium (Main Hall)</option>
+            </select>
+          </div>
+          <div class="form-group mt-4">
+            <label for="ttTimeSlot">Time Slot</label>
+            <input type="text" id="ttTimeSlot" class="form-input" required placeholder="e.g. 10:00 AM - 11:00 AM">
+          </div>
+          <div class="form-group mt-4">
+            <label for="ttExpected">Expected Student Strength</label>
+            <input type="number" id="ttExpected" class="form-input" required min="1" max="500" value="50">
+          </div>
+          <div class="form-actions mt-6" style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" class="btn-secondary" onclick="closeAddTimetableModal()">CANCEL</button>
+            <button type="submit" class="btn-primary" id="btnTimetableSubmit">ADD LECTURE</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVATE EMERGENCY CONFIRMATION MODAL -->
+  <div id="activateEmergencyModal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true">
+    <div class="modal-content panel modal-danger-dialog">
+      <div class="panel-header">
+        <div class="modal-header-left">
+          <span class="text-red" style="font-size: 20px;">🚨</span>
+          <h2>Activate Emergency Mode?</h2>
+        </div>
+        <button class="icon-btn close-btn" onclick="closeActivateEmergencyModal()">✕</button>
+      </div>
+      <div class="p-4">
+        <p style="font-size: 14px; line-height: 1.6; color: var(--text-main);">
+          Are you sure you want to switch CampusVision into <strong>Emergency &amp; Evacuation Awareness Mode</strong>?
+        </p>
+        <div class="emergency-confirm-notice mt-3">
+          <div class="notice-item">⚠️ Highlights high-density zones in Crimson and activates situational crowd telemetry.</div>
+          <div class="notice-item">📍 Visualizes directional evacuation routes toward campus assembly quads.</div>
+          <div class="notice-item">ℹ️ <em>Simulation / Awareness Mode only. External emergency services are not automatically dispatched.</em></div>
+        </div>
+        <div class="form-actions mt-6" style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" onclick="closeActivateEmergencyModal()">Cancel</button>
+          <button type="button" class="btn-danger" id="btnConfirmActivateEmergency" onclick="executeActivateEmergency()">🚨 Activate Emergency Mode</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXIT EMERGENCY CONFIRMATION MODAL -->
+  <div id="exitEmergencyModal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true">
+    <div class="modal-content panel modal-neutral-dialog">
+      <div class="panel-header">
+        <div class="modal-header-left">
+          <span class="text-cyan" style="font-size: 20px;">🛡️</span>
+          <h2>Exit Emergency Mode?</h2>
+        </div>
+        <button class="icon-btn close-btn" onclick="closeExitEmergencyModal()">✕</button>
+      </div>
+      <div class="p-4">
+        <p style="font-size: 14px; line-height: 1.6; color: var(--text-main);">
+          Return the CampusVision command center to standard academic monitoring mode?
+        </p>
+        <div class="form-actions mt-6" style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" onclick="closeExitEmergencyModal()">Cancel</button>
+          <button type="button" class="btn-primary" id="btnConfirmExitEmergency" onclick="executeExitEmergency()">Exit Emergency Mode</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECHEXPO DEMO MODE MODAL -->
+  <div id="demoModeModal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true">
+    <div class="modal-content panel demo-modal-panel">
+      <div class="panel-header">
+        <div class="modal-header-left">
+          <span style="font-size: 20px;">🎛️</span>
+          <h2>TECHEXPO 2026 PRESENTATION SIMULATOR</h2>
+          <span class="panel-badge badge-warning" id="demoActiveStatusBadge">DEMO STANDBY</span>
+        </div>
+        <button class="icon-btn close-btn" onclick="closeDemoModeModal()">✕</button>
+      </div>
+      <div class="p-4">
+        <div class="demo-banner">
+          <div class="demo-banner-title">DEMO MODE SIMULATION</div>
+          <div class="demo-banner-desc">Simulate live crowd fluctuations, high-density zones, camera offline events, and emergency evacuation in real time during the presentation without modifying persistent production logs.</div>
+        </div>
+
+        <div class="mt-4">
+          <h3 class="section-title">ONE-CLICK PRESENTATION SCENARIOS</h3>
+          <div class="demo-preset-grid mt-2">
+            <button class="btn-demo-preset" onclick="applyDemoScenario('normal')">
+              <span class="p-icon">🟢</span>
+              <div class="p-text">
+                <strong>Normal Academic Hours</strong>
+                <span>A-101: 42, A-102: 31, Corridors Normal</span>
+              </div>
+            </button>
+            <button class="btn-demo-preset" onclick="applyDemoScenario('surge_a101')">
+              <span class="p-icon">🔴</span>
+              <div class="p-text">
+                <strong>Surge in Room A-101</strong>
+                <span>42 → 58 → 72 (Overcapacity Warning)</span>
+              </div>
+            </button>
+            <button class="btn-demo-preset" onclick="applyDemoScenario('corridor_congestion')">
+              <span class="p-icon">🚶</span>
+              <div class="p-text">
+                <strong>Corridor Congestion Hazard</strong>
+                <span>Corridors: 50 → 86 → 110 (Safety Limit Exceeded)</span>
+              </div>
+            </button>
+            <button class="btn-demo-preset" onclick="applyDemoScenario('cam_offline')">
+              <span class="p-icon">⚫</span>
+              <div class="p-text">
+                <strong>Camera-07 Offline Event</strong>
+                <span>Main Lobby Surveillance Disconnected</span>
+              </div>
+            </button>
+            <button class="btn-demo-preset" onclick="applyDemoScenario('emergency_evac')">
+              <span class="p-icon">🚨</span>
+              <div class="p-text">
+                <strong>Emergency Evacuation Drill</strong>
+                <span>Emergency Mode + High Density Warnings</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-6 border-top pt-4">
+          <h3 class="section-title">LIVE OCCUPANCY SLIDERS (WATCH 3D TWIN &amp; HEATMAP RESPOND)</h3>
+          <div class="demo-sliders-grid mt-2">
+            <div class="slider-group">
+              <div class="slider-header">
+                <span>Room A-101 (Cap: 60)</span>
+                <strong id="demoSliderVal_A101">42 Ppl</strong>
+              </div>
+              <input type="range" min="0" max="80" value="42" class="demo-range" id="demoRange_A101" oninput="onDemoSliderChange('A-101', this.value)">
+            </div>
+            <div class="slider-group">
+              <div class="slider-header">
+                <span>Room A-102 (Cap: 60)</span>
+                <strong id="demoSliderVal_A102">31 Ppl</strong>
+              </div>
+              <input type="range" min="0" max="75" value="31" class="demo-range" id="demoRange_A102" oninput="onDemoSliderChange('A-102', this.value)">
+            </div>
+            <div class="slider-group">
+              <div class="slider-header">
+                <span>Academic Corridor C-1 (Limit: 30)</span>
+                <strong id="demoSliderVal_C1">18 Ppl</strong>
+              </div>
+              <input type="range" min="0" max="60" value="18" class="demo-range" id="demoRange_C1" oninput="onDemoSliderChange('C-1', this.value)">
+            </div>
+            <div class="slider-group">
+              <div class="slider-header">
+                <span>Auditorium (Cap: 250)</span>
+                <strong id="demoSliderVal_Auditorium">115 Ppl</strong>
+              </div>
+              <input type="range" min="0" max="300" value="115" class="demo-range" id="demoRange_Auditorium" oninput="onDemoSliderChange('Auditorium', this.value)">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions mt-6" style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" onclick="disableDemoMode()">Reset to Live Production Data</button>
+          <button type="button" class="btn-primary" onclick="closeDemoModeModal()">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', path='js/three-viz.js') }}"></script>
+  <script src="{{ url_for('static', path='js/campus-twin.js') }}"></script>
+  <script src="{{ url_for('static', path='js/dashboard.js') }}"></script>
+</body>
+</html>
