@@ -89,16 +89,16 @@
             <line x1="270" y1="20" x2="270" y2="190" class="svg-grid-line" />
             <line x1="400" y1="20" x2="400" y2="190" class="svg-grid-line" />
 
-            <!-- Connecting Optical Data Lines (Animated) -->
-            <path d="M 85 70 L 195 70 L 270 45 L 345 70 L 455 70" class="svg-active-highway" />
-            <path d="M 85 70 L 85 140 L 270 155 L 455 140 L 455 70" class="svg-data-connector" />
-            <path d="M 270 45 L 270 155" class="svg-active-highway" />
+            <!-- Connecting Optical Data Lines (Animated between Block A, IT Lab, and Central Quad) -->
+            <path d="M 85 70 L 147 145 L 392 145 L 455 70" class="svg-active-highway" />
+            <path d="M 85 70 L 270 45 L 455 70" class="svg-data-connector" />
+            <path d="M 147 145 L 270 45 L 392 145" class="svg-active-highway" />
 
             <!-- BLOCK A: Academic Complex (CSE / AI Labs) -->
             <g transform="translate(30, 36)">
               <rect width="110" height="68" class="svg-block-rect" />
               <text x="12" y="24" class="svg-block-title">BLOCK A</text>
-              <text x="12" y="38" class="svg-block-sub">CSE &amp; AI LABS</text>
+              <text x="12" y="38" class="svg-block-sub">CSE COMPLEX</text>
               <!-- Small Occupancy Badge -->
               <rect x="12" y="46" width="76" height="14" class="svg-metric-badge" />
               <text x="17" y="56" class="svg-metric-text">OCCUPANCY: 84%</text>
@@ -107,11 +107,11 @@
             <!-- CENTRAL PSIT TOWER & INNOVATION HUB -->
             <g transform="translate(205, 12)">
               <rect width="130" height="66" class="svg-landmark-rect" />
-              <text x="14" y="23" class="svg-block-title" fill="#60a5fa">PSIT TOWER</text>
-              <text x="14" y="37" class="svg-block-sub" fill="#93c5fd">T&amp;P &bull; CENTRAL HUB</text>
+              <text x="14" y="23" class="svg-block-title" fill="#caf0f8">PSIT TOWER</text>
+              <text x="14" y="37" class="svg-block-sub" fill="#48cae4">T&amp;P &bull; CENTRAL HUB</text>
               <!-- Status Chip -->
-              <rect x="14" y="44" width="92" height="14" class="svg-metric-badge" />
-              <text x="19" y="54" class="svg-metric-text">AI SURVEILLANCE ON</text>
+              <rect x="14" y="44" width="102" height="14" class="svg-metric-badge" />
+              <text x="18" y="54" class="svg-metric-text">COMMAND MATRIX ON</text>
             </g>
 
             <!-- BLOCK B: Engineering Complex -->
@@ -124,43 +124,47 @@
               <text x="17" y="56" class="svg-metric-text">OCCUPANCY: 62%</text>
             </g>
 
-            <!-- TOWN HALL & SURVEILLANCE OPS -->
-            <g transform="translate(85, 126)">
-              <rect width="125" height="52" class="svg-block-rect" />
-              <text x="12" y="22" class="svg-block-title">TOWN HALL</text>
-              <text x="12" y="36" class="svg-block-sub">DEAN &bull; ADMIN HQ</text>
+            <!-- IT LAB: Advanced Computing & AI Hub -->
+            <g transform="translate(85, 122)">
+              <rect width="125" height="56" class="svg-block-rect" />
+              <text x="12" y="22" class="svg-block-title">IT LAB</text>
+              <text x="12" y="36" class="svg-block-sub">AI &amp; CLOUD CLUSTER</text>
+              <rect x="12" y="42" width="82" height="12" class="svg-metric-badge" />
+              <text x="16" y="51" class="svg-metric-text">TELEMETRY: ACTIVE</text>
             </g>
 
             <!-- CENTRAL QUAD & ASSEMBLY -->
-            <g transform="translate(330, 126)">
-              <rect width="125" height="52" class="svg-block-rect" />
+            <g transform="translate(330, 122)">
+              <rect width="125" height="56" class="svg-block-rect" />
               <text x="12" y="22" class="svg-block-title">CENTRAL QUAD</text>
               <text x="12" y="36" class="svg-block-sub">ASSEMBLY &bull; EGRESS</text>
+              <rect x="12" y="42" width="82" height="12" class="svg-metric-badge" />
+              <text x="16" y="51" class="svg-metric-text">SAFE ZONE CLEAR</text>
             </g>
 
-            <!-- CCTV CAMERA SENSOR NODES WITH RADAR PULSE -->
-            <!-- Cam 1 (Main Gate / Block A Junction) -->
-            <g transform="translate(195, 70)">
+            <!-- CCTV CAMERA SENSOR NODES WITH RADAR PULSE (Scaling 1.0 to 2.2 with cyan glow) -->
+            <!-- Cam 1 (Block A to IT Lab Corridor Node) -->
+            <g transform="translate(116, 107)">
               <circle cx="0" cy="0" r="14" class="svg-camera-ping" />
               <circle cx="0" cy="0" r="5" class="svg-camera-node" />
             </g>
 
             <!-- Cam 2 (Central Tower Gateway) -->
-            <g transform="translate(270, 105)">
-              <circle cx="0" cy="0" r="18" class="svg-camera-ping" style="animation-delay: 1s;" />
-              <circle cx="0" cy="0" r="6" class="svg-camera-node" fill="#06b6d4" />
-            </g>
-
-            <!-- Cam 3 (Block B Junction) -->
-            <g transform="translate(345, 70)">
-              <circle cx="0" cy="0" r="14" class="svg-camera-ping" style="animation-delay: 2s;" />
+            <g transform="translate(270, 45)">
+              <circle cx="0" cy="0" r="14" class="svg-camera-ping" style="animation-delay: 0.6s;" />
               <circle cx="0" cy="0" r="5" class="svg-camera-node" />
             </g>
 
-            <!-- Cam 4 (Quad Hub) -->
-            <g transform="translate(270, 155)">
-              <circle cx="0" cy="0" r="12" class="svg-camera-ping" style="animation-delay: 1.5s;" />
-              <circle cx="0" cy="0" r="4.5" class="svg-camera-node" />
+            <!-- Cam 3 (IT Lab to Central Quad Vector Node) -->
+            <g transform="translate(269, 145)">
+              <circle cx="0" cy="0" r="14" class="svg-camera-ping" style="animation-delay: 1.2s;" />
+              <circle cx="0" cy="0" r="5" class="svg-camera-node" />
+            </g>
+
+            <!-- Cam 4 (Central Quad Egress Node) -->
+            <g transform="translate(392, 122)">
+              <circle cx="0" cy="0" r="14" class="svg-camera-ping" style="animation-delay: 1.8s;" />
+              <circle cx="0" cy="0" r="5" class="svg-camera-node" />
             </g>
           </svg>
 

@@ -1,0 +1,17 @@
+warning: in the working copy of 'static/css/login.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'static/css/styles.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'static/js/campus-twin.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'static/js/dashboard.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'static/js/three-viz.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'templates/dashboard.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'templates/login.html', LF will be replaced by CRLF the next time Git touches it
+ campusvision.db          | Bin [31m73728[m -> [32m73728[m bytes
+ requirementt.txt         |   4 [31m-[m
+ static/css/login.css     |  64 [32m++[m[31m--[m
+ static/css/styles.css    | 934 [32m+++++++++++++++++++++++++++++++++++++[m[31m----------[m
+ static/js/campus-twin.js | 124 [32m+++++[m[31m--[m
+ static/js/dashboard.js   |  26 [32m+[m[31m-[m
+ static/js/three-viz.js   |  43 [32m+[m[31m--[m
+ templates/dashboard.html | 128 [32m++++++[m[31m-[m
+ templates/login.html     |  62 [32m++[m[31m--[m
+ 9 files changed, 1071 insertions(+), 314 deletions(-)

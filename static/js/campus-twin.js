@@ -127,10 +127,10 @@
         container = document.getElementById("campus-twin-canvas-container");
         if (!container || isInitialized) return;
 
-        // 1. Scene & Lighting
+        // 1. Scene & Lighting (Deep Navy #03045e Theme)
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x07090d);
-        scene.fog = new THREE.FogExp2(0x07090d, 0.015);
+        scene.background = new THREE.Color(0x03045e);
+        scene.fog = new THREE.FogExp2(0x03045e, 0.012);
 
         // 2. Camera setup
         const aspect = container.clientWidth / (container.clientHeight || 450);
@@ -147,11 +147,11 @@
         container.appendChild(renderer.domElement);
 
         // 4. Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        const ambientLight = new THREE.AmbientLight(0x90e0ef, 0.7);
         ambientLight.name = "ambientLight";
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xa5f3fc, 1.2);
+        const dirLight = new THREE.DirectionalLight(0xcaf0f8, 1.3);
         dirLight.position.set(20, 40, 20);
         dirLight.castShadow = true;
         dirLight.shadow.mapSize.width = 1024;
@@ -164,16 +164,16 @@
         emergencyLight.name = "emergencySirenLight";
         scene.add(emergencyLight);
 
-        // 5. Ground Plane & Grid
-        const gridHelper = new THREE.GridHelper(60, 30, 0x1e293b, 0x0f172a);
+        // 5. Ground Plane & Grid (Cobalt Accent & Midnight Blue)
+        const gridHelper = new THREE.GridHelper(60, 30, 0x0077b6, 0x023e8a);
         gridHelper.position.y = 0;
         scene.add(gridHelper);
 
         const groundGeo = new THREE.PlaneGeometry(60, 60);
         const groundMat = new THREE.MeshStandardMaterial({
-            color: 0x0a0f18,
-            roughness: 0.9,
-            metalness: 0.1
+            color: 0x021a4d,
+            roughness: 0.85,
+            metalness: 0.2
         });
         const ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
@@ -219,17 +219,17 @@
                 continue;
             }
 
-            // Room Building Block
+            // Room Building Block (Rich Midnight Blue #023e8a with Vibrant Cyan Glow)
             const geo = new THREE.BoxGeometry(w, h, d);
             const mat = new THREE.MeshPhysicalMaterial({
-                color: 0x0d1522,
-                emissive: 0x06b6d4,
-                emissiveIntensity: 0.15,
+                color: 0x023e8a,
+                emissive: 0x00b4d8,
+                emissiveIntensity: 0.18,
                 transparent: true,
-                opacity: 0.78,
-                roughness: 0.3,
-                metalness: 0.6,
-                clearcoat: 0.3,
+                opacity: 0.82,
+                roughness: 0.28,
+                metalness: 0.65,
+                clearcoat: 0.35,
                 wireframe: false
             });
 
@@ -239,15 +239,15 @@
             mesh.receiveShadow = true;
             mesh.userData = { roomKey: key, zoneData: zone };
 
-            // Edges Wireframe Accent
+            // Edges Wireframe Accent (Cyan #48cae4)
             const edgesGeo = new THREE.EdgesGeometry(geo);
-            const edgesMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.6 });
+            const edgesMat = new THREE.LineBasicMaterial({ color: 0x48cae4, transparent: true, opacity: 0.75 });
             const edges = new THREE.LineSegments(edgesGeo, edgesMat);
             mesh.add(edges);
 
             // Roof / Floor Indicator
             const roofGeo = new THREE.BoxGeometry(w - 0.2, 0.1, d - 0.2);
-            const roofMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x0077b6, roughness: 0.4 });
             const roof = new THREE.Mesh(roofGeo, roofMat);
             roof.position.set(0, h / 2 + 0.05, 0);
             mesh.add(roof);
@@ -256,22 +256,22 @@
             roomMeshes[key] = mesh;
 
             // Add 3D Floating Beacon
-            createHtmlBeacon(key, zone.title || zone.name, "Initializing...", 0x06b6d4);
+            createHtmlBeacon(key, zone.title || zone.name, "Initializing...", 0x00b4d8);
 
-            // Build camera antenna / marker for active camera rooms
+            // Build camera antenna / marker for active camera rooms (Cyan Glow #00b4d8)
             if (key === "A-101" || key === "C-2") {
                 const camCylinderGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.8, 16);
-                const camMat = new THREE.MeshBasicMaterial({ color: key === "C-2" ? 0x64748b : 0x06b6d4 });
+                const camMat = new THREE.MeshBasicMaterial({ color: key === "C-2" ? 0x64748b : 0x00b4d8 });
                 const camCylinder = new THREE.Mesh(camCylinderGeo, camMat);
                 camCylinder.position.set(x, y + h / 2 + 0.6, z);
                 scene.add(camCylinder);
 
-                const pulseRingGeo = new THREE.RingGeometry(0.4, 0.6, 16);
+                const pulseRingGeo = new THREE.RingGeometry(0.4, 0.65, 24);
                 const pulseRingMat = new THREE.MeshBasicMaterial({
-                    color: key === "C-2" ? 0xef4444 : 0x10b981,
+                    color: key === "C-2" ? 0xef4444 : 0x48cae4,
                     side: THREE.DoubleSide,
                     transparent: true,
-                    opacity: 0.8
+                    opacity: 0.95
                 });
                 const pulseRing = new THREE.Mesh(pulseRingGeo, pulseRingMat);
                 pulseRing.rotation.x = -Math.PI / 2;
@@ -283,6 +283,43 @@
 
         // Connecting pathways & roads
         createPathways();
+
+        // 3D Animated Vector Data Flow Lines between Block A, IT Lab, and Central Quad
+        create3DVectorFlowLines();
+    }
+
+    let vectorFlowPulses = [];
+    function create3DVectorFlowLines() {
+        const segments = [
+            // Block A (A-101) to IT Lab
+            [new THREE.Vector3(-10, 2.5, -6), new THREE.Vector3(-3, 3.2, -1), new THREE.Vector3(10, 2.5, 4)],
+            // IT Lab to Central Quad
+            [new THREE.Vector3(10, 2.5, 4), new THREE.Vector3(5, 2.8, 9), new THREE.Vector3(0, 1.2, 14)],
+            // Central Quad to Block A
+            [new THREE.Vector3(0, 1.2, 14), new THREE.Vector3(-6, 2.8, 4), new THREE.Vector3(-10, 2.5, -6)]
+        ];
+
+        segments.forEach((pts, idx) => {
+            const curve = new THREE.CatmullRomCurve3(pts);
+            const tubeGeo = new THREE.TubeGeometry(curve, 32, 0.08, 8, false);
+            const tubeMat = new THREE.MeshBasicMaterial({
+                color: 0x00b4d8,
+                transparent: true,
+                opacity: 0.45,
+                wireframe: true
+            });
+            const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+            scene.add(tubeMesh);
+
+            // Travelling packet
+            const packetGeo = new THREE.SphereGeometry(0.3, 12, 12);
+            const packetMat = new THREE.MeshBasicMaterial({
+                color: 0xcaf0f8
+            });
+            const packetMesh = new THREE.Mesh(packetGeo, packetMat);
+            scene.add(packetMesh);
+            vectorFlowPulses.push({ mesh: packetMesh, curve: curve, offset: idx * 0.33 });
+        });
     }
 
     function createPathways() {
@@ -338,10 +375,10 @@
         ctx.clearRect(0, 0, 256, 128);
 
         // Background rounded pill
-        ctx.fillStyle = "rgba(13, 17, 24, 0.88)";
+        ctx.fillStyle = "rgba(2, 62, 138, 0.92)";
         ctx.strokeStyle = isOffline ? "#64748b" : (typeof colorHex === "number" ? "#" + colorHex.toString(16).padStart(6, "0") : colorHex);
         ctx.lineWidth = 4;
-        
+
         ctx.beginPath();
         ctx.roundRect(10, 14, 236, 100, 16);
         ctx.fill();
@@ -354,12 +391,12 @@
         ctx.fill();
 
         // Title
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#caf0f8";
         ctx.font = "bold 24px Inter, sans-serif";
         ctx.fillText(title, 54, 52);
 
         // Subtitle / Telemetry
-        ctx.fillStyle = "#94a3b8";
+        ctx.fillStyle = "#90e0ef";
         ctx.font = "18px 'JetBrains Mono', monospace";
         ctx.fillText(subtitle, 36, 88);
     }
@@ -479,11 +516,30 @@
         requestAnimationFrame(animate);
         const elapsed = clock.getElapsedTime();
 
-        // Pulsing active camera rings
+        // 1. Radar Pulse Nodes: Expanding cyan ring (#48cae4) scaling 1.0 to 2.2 on 2-second loop with smooth opacity fade
+        const pulseCycle = (elapsed % 2.0) / 2.0;
+        const currentScale = 1.0 + pulseCycle * 1.2;
+        const currentOpacity = Math.max(0, 1.0 - pulseCycle);
+
         const camRing1 = scene.getObjectByName("camPulse_A-101");
         if (camRing1) {
-            const scale = 1 + Math.sin(elapsed * 4) * 0.2;
-            camRing1.scale.set(scale, scale, 1);
+            camRing1.scale.set(currentScale, currentScale, 1);
+            if (camRing1.material) camRing1.material.opacity = currentOpacity;
+        }
+
+        const camRing2 = scene.getObjectByName("camPulse_C-2");
+        if (camRing2) {
+            camRing2.scale.set(currentScale, currentScale, 1);
+            if (camRing2.material) camRing2.material.opacity = currentOpacity;
+        }
+
+        // 2. Animate 3D travelling vector packets between Block A, IT Lab, and Central Quad
+        if (vectorFlowPulses && vectorFlowPulses.length > 0) {
+            vectorFlowPulses.forEach(item => {
+                const t = ((elapsed * 0.35 + item.offset) % 1.0);
+                const pos = item.curve.getPointAt(t);
+                item.mesh.position.copy(pos);
+            });
         }
 
         // Emergency Siren pulse in 3D

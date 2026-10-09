@@ -25,57 +25,58 @@ document.addEventListener("DOMContentLoaded", () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // Lights - Intensified
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // Lights - Intensified (Command Center Cyan & Electric Blue)
+    const ambientLight = new THREE.AmbientLight(0xcaf0f8, 0.7);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0x06b6d4, 3, 50);
+    const pointLight = new THREE.PointLight(0x00b4d8, 3.5, 50);
     pointLight.position.set(5, 5, 5);
     scene.add(pointLight);
 
-    const violetLight = new THREE.PointLight(0x8b5cf6, 2, 50);
-    violetLight.position.set(-5, -5, 5);
-    scene.add(violetLight);
+    const electricLight = new THREE.PointLight(0x0096c7, 2.8, 50);
+    electricLight.position.set(-5, -5, 5);
+    scene.add(electricLight);
 
-    // AI Core (Scaled up)
-    const coreGeo = new THREE.IcosahedronGeometry(2.8, 1); // 1.4x larger
+    // AI Core (Scaled up with Deep Navy base and Vibrant Cyan Emissive)
+    const coreGeo = new THREE.IcosahedronGeometry(2.8, 1);
     const coreMat = new THREE.MeshPhysicalMaterial({
-        color: 0x07090D,
-        emissive: 0x06b6d4,
-        emissiveIntensity: 0.2, // Standby intensity
+        color: 0x03045e,
+        emissive: 0x00b4d8,
+        emissiveIntensity: 0.25, // Standby intensity
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.92,
         roughness: 0.1,
         metalness: 0.9,
         wireframe: true,
     });
     const aiCore = new THREE.Mesh(coreGeo, coreMat);
-    aiCore.position.x = 1; // Centered more
+    aiCore.position.x = 1;
     scene.add(aiCore);
 
-    // Orbital Rings
+    // Orbital Rings (Cobalt & Cyan Glow)
     const ringGeo1 = new THREE.TorusGeometry(4.5, 0.015, 16, 100);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.5 });
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x0077b6, transparent: true, opacity: 0.7 });
     const ring1 = new THREE.Mesh(ringGeo1, ringMat);
     ring1.rotation.x = Math.PI / 3;
     ring1.position.x = 1;
     scene.add(ring1);
 
     const ringGeo2 = new THREE.TorusGeometry(5.8, 0.015, 16, 100);
-    const ring2 = new THREE.Mesh(ringGeo2, ringMat);
+    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x48cae4, transparent: true, opacity: 0.65 });
+    const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
     ring2.rotation.y = Math.PI / 3;
     ring2.position.x = 1;
     scene.add(ring2);
 
     // Scanning Ring (Active when camera is running)
     const scanGeo = new THREE.TorusGeometry(4.0, 0.03, 16, 100);
-    const scanMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4, transparent: true, opacity: 0 });
+    const scanMat = new THREE.MeshBasicMaterial({ color: 0x00b4d8, transparent: true, opacity: 0 });
     const scanRing = new THREE.Mesh(scanGeo, scanMat);
     scanRing.rotation.x = Math.PI / 2;
     scanRing.position.x = 1;
     scene.add(scanRing);
 
-    // Particles (More intense)
+    // Particles (Ice-cyan telemetry particles)
     const particlesGeo = new THREE.BufferGeometry();
     const particleCount = 200; 
     const posArray = new Float32Array(particleCount * 3);
@@ -84,10 +85,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
     const particlesMat = new THREE.PointsMaterial({
-        size: 0.06,
-        color: 0x06b6d4,
+        size: 0.07,
+        color: 0x90e0ef,
         transparent: true,
-        opacity: 0.6
+        opacity: 0.75
     });
     const particlesMesh = new THREE.Points(particlesGeo, particlesMat);
     scene.add(particlesMesh);

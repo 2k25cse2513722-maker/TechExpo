@@ -21,8 +21,11 @@
     <aside class="sidebar" id="appSidebar" aria-label="Main Navigation">
       <div class="sidebar-top">
         <div class="brand">
-          <div class="brand-title">CAMPUSVISION<br><span class="brand-ai">AI</span></div>
-          <div class="brand-subtitle">PSIT SMART CAMPUS</div>
+          <div class="brand-text-wrap">
+            <div class="brand-title"><span class="brand-full-text">CAMPUSVISION<br></span><span class="brand-ai">AI</span></div>
+            <div class="brand-subtitle">PSIT SMART CAMPUS</div>
+          </div>
+          <button class="btn-sidebar-toggle" id="btnSidebarCollapse" onclick="toggleSidebarCollapse()" title="Toggle Sidebar Rail (Expand/Collapse)" aria-label="Toggle Sidebar">◀</button>
         </div>
         
         <nav class="nav-menu" role="navigation">
@@ -91,7 +94,7 @@
           </div>
         </div>
         <a href="/logout" class="btn-logout" id="btnLogout" aria-label="Log out of CampusVision">
-          <span>⏻</span> Sign Out
+          <span>⏻</span> <span class="logout-label">Sign Out</span>
         </a>
       </div>
     </aside>
@@ -102,6 +105,9 @@
         <div class="header-left">
           <button class="mobile-menu-btn" id="btnMobileMenu" onclick="toggleMobileSidebar()" aria-label="Toggle navigation menu">
             ☰
+          </button>
+          <button class="icon-btn" id="btnHeaderSidebarToggle" onclick="toggleSidebarCollapse()" title="Toggle Sidebar" aria-label="Toggle Sidebar Navigation">
+            ◧
           </button>
           <div class="breadcrumb" id="appBreadcrumb">
             <span class="crumb-highlight" id="crumbParent">Campus Overview</span> 
@@ -253,6 +259,7 @@
                 <!-- View Switcher Tabs -->
                 <div class="twin-view-selector" role="tablist">
                   <button class="twin-tab-btn active" id="tabBtnDigitalTwin" onclick="switchLiveCampusView('twin')">🌐 Digital Twin (3D)</button>
+                  <button class="twin-tab-btn" id="tabBtnVectorMap" onclick="switchLiveCampusView('vector')">⚡ Live Vector Topology</button>
                   <button class="twin-tab-btn" id="tabBtnHeatmap" onclick="switchLiveCampusView('heatmap')">🗺️ Smart Heatmap</button>
                   <button class="twin-tab-btn emergency-tab-btn" id="tabBtnEmergency" onclick="switchLiveCampusView('emergency')">🚨 Emergency Mode</button>
                 </div>
@@ -300,6 +307,121 @@
                   <div class="legend-item"><span class="legend-dot red"></span> High (75–100%)</div>
                   <div class="legend-item"><span class="legend-dot purple"></span> Overcapacity (&gt;100%)</div>
                   <div class="legend-item"><span class="legend-dot slate"></span> Camera Offline</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW: LIVE CAMPUS VECTOR TOPOLOGY & MOVING OBJECT DYNAMICS -->
+            <div class="live-campus-body" id="view-vector-topology" style="display: none;">
+              <div class="vector-topology-wrapper">
+                <svg viewBox="0 0 540 220" class="schematic-svg-canvas" preserveAspectRatio="xMidYMid meet">
+                  <defs>
+                    <linearGradient id="dashCyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#00b4d8" stop-opacity="0.9" />
+                      <stop offset="50%" stop-color="#48cae4" stop-opacity="1" />
+                      <stop offset="100%" stop-color="#90e0ef" stop-opacity="0.9" />
+                    </linearGradient>
+                  </defs>
+
+                  <!-- Spatial Grid System -->
+                  <line x1="20" y1="50" x2="520" y2="50" class="svg-grid-line" />
+                  <line x1="20" y1="110" x2="520" y2="110" class="svg-grid-line" />
+                  <line x1="20" y1="170" x2="520" y2="170" class="svg-grid-line" />
+                  <line x1="140" y1="20" x2="140" y2="200" class="svg-grid-line" />
+                  <line x1="270" y1="20" x2="270" y2="200" class="svg-grid-line" />
+                  <line x1="400" y1="20" x2="400" y2="200" class="svg-grid-line" />
+
+                  <!-- Connecting Optical Data Lines (Animated between Block A, IT Lab, and Central Quad) -->
+                  <path id="flowAtoIT" d="M 85 70 L 147 145" class="svg-pulse-highway" />
+                  <path id="flowITtoQuad" d="M 147 145 L 392 145" class="svg-pulse-highway" />
+                  <path id="flowQuadtoB" d="M 392 145 L 455 70" class="svg-active-highway" />
+                  <path id="flowTowerSpine" d="M 85 70 L 270 45 L 455 70" class="svg-data-connector" />
+                  <path id="flowTowerMid" d="M 270 45 L 270 145" class="svg-active-highway" />
+
+                  <!-- BLOCK A: Academic Complex (CSE / AI Labs) -->
+                  <g transform="translate(30, 36)" style="cursor: pointer;" onclick="viewClassroomDetails('A-101')">
+                    <rect width="110" height="68" class="svg-block-rect" />
+                    <text x="12" y="24" class="svg-block-title">BLOCK A</text>
+                    <text x="12" y="38" class="svg-block-sub">CSE COMPLEX</text>
+                    <rect x="12" y="46" width="76" height="14" class="svg-metric-badge" />
+                    <text x="17" y="56" class="svg-metric-text">OCCUPANCY: 84%</text>
+                  </g>
+
+                  <!-- CENTRAL PSIT TOWER & INNOVATION HUB -->
+                  <g transform="translate(205, 12)">
+                    <rect width="130" height="66" class="svg-landmark-rect" />
+                    <text x="14" y="23" class="svg-block-title" fill="#caf0f8">PSIT TOWER</text>
+                    <text x="14" y="37" class="svg-block-sub" fill="#48cae4">T&amp;P &bull; CENTRAL HUB</text>
+                    <rect x="14" y="44" width="102" height="14" class="svg-metric-badge" />
+                    <text x="18" y="54" class="svg-metric-text">COMMAND MATRIX ON</text>
+                  </g>
+
+                  <!-- BLOCK B: Engineering Complex -->
+                  <g transform="translate(400, 36)" style="cursor: pointer;" onclick="viewClassroomDetails('B-201')">
+                    <rect width="110" height="68" class="svg-block-rect" />
+                    <text x="12" y="24" class="svg-block-title">BLOCK B</text>
+                    <text x="12" y="38" class="svg-block-sub">ECE &amp; ROBOTICS</text>
+                    <rect x="12" y="46" width="76" height="14" class="svg-metric-badge" />
+                    <text x="17" y="56" class="svg-metric-text">OCCUPANCY: 62%</text>
+                  </g>
+
+                  <!-- IT LAB: Advanced Computing & AI Hub -->
+                  <g transform="translate(85, 122)" style="cursor: pointer;" onclick="viewClassroomDetails('AI-Lab')">
+                    <rect width="125" height="56" class="svg-block-rect" />
+                    <text x="12" y="22" class="svg-block-title">IT LAB</text>
+                    <text x="12" y="36" class="svg-block-sub">AI &amp; CLOUD CLUSTER</text>
+                    <rect x="12" y="42" width="82" height="12" class="svg-metric-badge" />
+                    <text x="16" y="51" class="svg-metric-text">TELEMETRY: ACTIVE</text>
+                  </g>
+
+                  <!-- CENTRAL QUAD & ASSEMBLY -->
+                  <g transform="translate(330, 122)">
+                    <rect width="125" height="56" class="svg-block-rect" />
+                    <text x="12" y="22" class="svg-block-title">CENTRAL QUAD</text>
+                    <text x="12" y="36" class="svg-block-sub">ASSEMBLY &bull; EGRESS</text>
+                    <rect x="12" y="42" width="82" height="12" class="svg-metric-badge" />
+                    <text x="16" y="51" class="svg-metric-text">SAFE ZONE CLEAR</text>
+                  </g>
+
+                  <!-- Active Radar Pulse Camera Nodes (Scaling 1.0 to 2.2 with cyan #48cae4 ring on 2s loop) -->
+                  <!-- Cam 1 (Block A to IT Lab Transit) -->
+                  <g transform="translate(116, 107)">
+                    <circle cx="0" cy="0" r="14" class="svg-camera-ping" />
+                    <circle cx="0" cy="0" r="5" class="svg-camera-node" />
+                  </g>
+
+                  <!-- Cam 2 (PSIT Tower Gateway) -->
+                  <g transform="translate(270, 45)">
+                    <circle cx="0" cy="0" r="14" class="svg-camera-ping" style="animation-delay: 0.6s;" />
+                    <circle cx="0" cy="0" r="5" class="svg-camera-node" />
+                  </g>
+
+                  <!-- Cam 3 (IT Lab to Central Quad Vector) -->
+                  <g transform="translate(269, 145)">
+                    <circle cx="0" cy="0" r="14" class="svg-camera-ping" style="animation-delay: 1.2s;" />
+                    <circle cx="0" cy="0" r="5" class="svg-camera-node" />
+                  </g>
+
+                  <!-- Cam 4 (Central Quad Egress Node) -->
+                  <g transform="translate(392, 122)">
+                    <circle cx="0" cy="0" r="14" class="svg-camera-ping" style="animation-delay: 1.8s;" />
+                    <circle cx="0" cy="0" r="5" class="svg-camera-node" />
+                  </g>
+                </svg>
+
+                <div class="vector-floating-legend">
+                  <div class="vector-legend-row">
+                    <span class="vector-line-sample high"></span>
+                    <span>Active Optical Vector (Block A ⟷ IT Lab ⟷ Quad)</span>
+                  </div>
+                  <div class="vector-legend-row">
+                    <span class="vector-line-sample active"></span>
+                    <span>Arterial Backbone Highway</span>
+                  </div>
+                  <div class="vector-legend-row">
+                    <span class="hud-pulse"></span>
+                    <span>Active Camera Radar Node (2s Pulsing)</span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -2098,16 +2098,19 @@ function switchLiveCampusView(viewType) {
     const btnTwin = document.getElementById('tabBtnDigitalTwin');
     const btnHeatmap = document.getElementById('tabBtnHeatmap');
     const btnEmergency = document.getElementById('tabBtnEmergency');
+    const btnVector = document.getElementById('tabBtnVectorMap');
 
     const viewTwin = document.getElementById('view-digital-twin');
     const viewHeatmap = document.getElementById('view-smart-heatmap');
     const viewEmergency = document.getElementById('view-emergency-mode');
+    const viewVector = document.getElementById('view-vector-topology');
     const modeBadge = document.getElementById('liveCampusModeBadge');
 
-    [btnTwin, btnHeatmap, btnEmergency].forEach(b => { if (b) b.classList.remove('active'); });
+    [btnTwin, btnHeatmap, btnEmergency, btnVector].forEach(b => { if (b) b.classList.remove('active'); });
     if (viewTwin) viewTwin.style.display = 'none';
     if (viewHeatmap) viewHeatmap.style.display = 'none';
     if (viewEmergency) viewEmergency.style.display = 'none';
+    if (viewVector) viewVector.style.display = 'none';
 
     if (viewType === 'twin') {
         if (btnTwin) btnTwin.classList.add('active');
@@ -2119,6 +2122,13 @@ function switchLiveCampusView(viewType) {
         if (window.CampusTwin && typeof window.CampusTwin.init === 'function') {
             window.CampusTwin.init();
             if (globalDigitalTwinData) window.CampusTwin.update(globalDigitalTwinData);
+        }
+    } else if (viewType === 'vector') {
+        if (btnVector) btnVector.classList.add('active');
+        if (viewVector) viewVector.style.display = 'block';
+        if (modeBadge) {
+            modeBadge.innerText = '● VECTOR TOPOLOGY ACTIVE';
+            modeBadge.className = 'live-beacon-tag badge-cyan';
         }
     } else if (viewType === 'heatmap') {
         if (btnHeatmap) btnHeatmap.classList.add('active');
@@ -2138,6 +2148,20 @@ function switchLiveCampusView(viewType) {
         if (globalDigitalTwinData) renderEmergencyDashboard(globalDigitalTwinData);
     }
 }
+
+function toggleSidebarCollapse() {
+    const sidebar = document.getElementById('appSidebar');
+    const layout = document.querySelector('.app-layout');
+    const btnToggle = document.getElementById('btnSidebarCollapse');
+    if (!sidebar) return;
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    if (layout) layout.classList.toggle('sidebar-collapsed', isCollapsed);
+    if (btnToggle) {
+        btnToggle.innerText = isCollapsed ? '▶' : '◀';
+        btnToggle.title = isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar';
+    }
+}
+window.toggleSidebarCollapse = toggleSidebarCollapse;
 
 function focusTwinRoom(roomKey) {
     switchLiveCampusView('twin');

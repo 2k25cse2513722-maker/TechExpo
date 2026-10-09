@@ -6,29 +6,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  --cv-bg-black: #06080e;
-  --cv-bg-dark: #0a0e17;
-  --cv-bg-surface: #0f1624;
-  --cv-bg-glass: rgba(13, 19, 33, 0.78);
-  --cv-bg-glass-input: rgba(17, 24, 39, 0.65);
+  --cv-bg-black: #03045e;
+  --cv-bg-dark: #03045e;
+  --cv-bg-surface: #023e8a;
+  --cv-bg-glass: rgba(2, 62, 138, 0.85);
+  --cv-bg-glass-input: rgba(3, 4, 94, 0.7);
   
-  --cv-border-subtle: rgba(255, 255, 255, 0.08);
-  --cv-border-highlight: rgba(6, 182, 212, 0.35);
-  --cv-border-focus: #06b6d4;
+  --cv-border-subtle: rgba(0, 180, 216, 0.22);
+  --cv-border-highlight: rgba(72, 202, 228, 0.45);
+  --cv-border-focus: #00b4d8;
   
-  --cv-cyan: #06b6d4;
-  --cv-cyan-bright: #22d3ee;
-  --cv-cyan-glow: rgba(6, 182, 212, 0.35);
-  --cv-teal: #0d9488;
-  --cv-blue: #3b82f6;
+  --cv-cyan: #00b4d8;
+  --cv-cyan-bright: #48cae4;
+  --cv-cyan-glow: rgba(0, 180, 216, 0.4);
+  --cv-teal: #0077b6;
+  --cv-blue: #0096c7;
   --cv-emerald: #10b981;
   --cv-amber: #f59e0b;
   --cv-red: #ef4444;
+  --cv-ice: #caf0f8;
   
-  --cv-text-primary: #f8fafc;
-  --cv-text-secondary: #94a3b8;
-  --cv-text-muted: #64748b;
-  --cv-text-dim: #475569;
+  --cv-text-primary: #caf0f8;
+  --cv-text-secondary: #90e0ef;
+  --cv-text-muted: #7da5c9;
+  --cv-text-dim: #5c7899;
   
   --cv-font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --cv-font-mono: 'JetBrains Mono', monospace;
@@ -366,9 +367,9 @@ body.login-page-body {
 
 .svg-camera-ping {
   fill: none;
-  stroke: var(--cv-cyan);
-  stroke-width: 1.5;
-  animation: cvRadarPing 3s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  stroke: var(--cv-cyan-bright);
+  stroke-width: 1.8;
+  animation: cvRadarPing 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   transform-origin: center;
 }
 
@@ -1122,12 +1123,29 @@ body.login-page-body {
 }
 
 @keyframes cvRadarPing {
-  0% { r: 4; opacity: 0.9; stroke-width: 2; }
-  100% { r: 24; opacity: 0; stroke-width: 0.5; }
+  0% {
+    r: 6;
+    opacity: 1;
+    stroke: #48cae4;
+    stroke-width: 2.2;
+    transform: scale(1.0);
+    transform-origin: center;
+  }
+  50% {
+    opacity: 0.55;
+  }
+  100% {
+    r: 16;
+    opacity: 0;
+    stroke: #48cae4;
+    stroke-width: 0.4;
+    transform: scale(2.2);
+    transform-origin: center;
+  }
 }
 
 @keyframes cvDataFlow {
-  from { stroke-dashoffset: 200; }
+  from { stroke-dashoffset: 160; }
   to { stroke-dashoffset: 0; }
 }
 
