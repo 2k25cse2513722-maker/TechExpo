@@ -591,6 +591,15 @@
                     <button class="btn-xs btn-outline" onclick="toggleFullscreen('mainVideoContainer')">⛶ FULLSCREEN</button>
                   </div>
                 </div>
+
+                <!-- SOURCE SELECTION CONTROLS -->
+                <div class="source-selector-bar">
+                  <button id="btnSourceVideoMain" class="btn-source" onclick="switchVideoSource('video')">🎬 RECORDED VIDEO</button>
+                  <button id="btnSourceCameraMain" class="btn-source" onclick="switchVideoSource('camera')">📹 LIVE CAMERA</button>
+                  <button id="btnStopSourceMain" class="btn-source btn-danger" style="display: none;" onclick="stopCamera()">■ STOP</button>
+                  <span class="source-indicator-badge" id="sourceBadgeMain">SOURCE: STANDBY</span>
+                </div>
+
                 <div class="video-panel" id="mainVideoContainer">
                   <div class="video-overlay-top">
                     <div class="overlay-left">
@@ -605,11 +614,11 @@
                   <div class="video-container">
                     <div id="cameraPlaceholder" class="elegant-empty-state">
                       <div class="empty-icon">◷</div>
-                      <div class="empty-title">CAMERA OFFLINE</div>
-                      <div class="empty-desc">Start the camera to begin real-time classroom monitoring and face recognition.</div>
+                      <div class="empty-title">FEED STANDBY</div>
+                      <div class="empty-desc">Select Recorded Video or Live Camera to begin real-time YOLOv11 person detection.</div>
                       <div class="camera-actions-row mt-4">
-                        <button onclick="startCamera()" class="btn-primary">▶ START HARDWARE CAMERA</button>
-                        <button onclick="startBrowserCamera()" class="btn-primary-outline">🌐 USE BROWSER WEBCAM</button>
+                        <button onclick="switchVideoSource('video')" class="btn-primary">🎬 PLAY RECORDED VIDEO</button>
+                        <button onclick="switchVideoSource('camera')" class="btn-primary-outline">📹 START LIVE CAMERA</button>
                       </div>
                     </div>
                     <img id="cctvStreamImg" src="" alt="Live Stream" style="display: none;">
@@ -624,6 +633,7 @@
 
                 <!-- TELEMETRY STRIP -->
                 <div class="telemetry-strip">
+                  <div class="tel-item"><span class="tel-label">SOURCE</span><span class="tel-val" id="telSource">STANDBY</span></div>
                   <div class="tel-item"><span class="tel-label">MODEL</span><span class="tel-val">YOLOv11 Nano</span></div>
                   <div class="tel-item"><span class="tel-label">DEVICE</span><span class="tel-val">AUTOMATIC</span></div>
                   <div class="tel-item"><span class="tel-label">FPS</span><span class="tel-val" id="telFps">--</span></div>
@@ -832,8 +842,9 @@
             <div class="section-page-actions">
               <button class="btn-secondary" onclick="navigateToSection('dashboard')">← Back to Dashboard</button>
               <button class="btn-outline" onclick="toggleFullscreen('liveCameraExpandedPanel')">⛶ Fullscreen</button>
-              <button id="btnCameraSecStart" class="btn-primary" onclick="startCamera()">▶ Start Camera</button>
-              <button id="btnCameraSecStop" class="btn-danger" style="display: none;" onclick="stopCamera()">■ Stop Camera</button>
+              <button id="btnSourceVideoSec" class="btn-source" onclick="switchVideoSource('video')">🎬 RECORDED VIDEO</button>
+              <button id="btnSourceCameraSec" class="btn-source" onclick="switchVideoSource('camera')">📹 LIVE CAMERA</button>
+              <button id="btnCameraSecStop" class="btn-danger" style="display: none;" onclick="stopCamera()">■ Stop</button>
             </div>
           </div>
 
@@ -847,7 +858,8 @@
                   </div>
                   <div class="camera-toolbar">
                     <button class="btn-xs btn-outline" onclick="reloadCameraStream()" title="Reload Stream">🔄 Reconnect</button>
-                    <button class="btn-xs btn-outline" onclick="startBrowserCamera()" title="Switch to Browser Webcam">🌐 Webcam</button>
+                    <button id="tbBtnVideo" class="btn-xs btn-outline" onclick="switchVideoSource('video')" title="Recorded Campus Video">🎬 Recorded Video</button>
+                    <button id="tbBtnCamera" class="btn-xs btn-outline" onclick="switchVideoSource('camera')" title="Live Laptop Webcam">📹 Live Camera</button>
                     <button class="btn-xs btn-outline" onclick="toggleFullscreen('liveCameraExpandedPanel')" title="Toggle Fullscreen">⛶ Fullscreen</button>
                   </div>
                 </div>
@@ -856,11 +868,11 @@
                   <div class="video-container" id="cameraExpandedContainer">
                     <div id="cameraExpandedPlaceholder" class="elegant-empty-state">
                       <div class="empty-icon">📹</div>
-                      <div class="empty-title">CAMERA STREAM READY</div>
-                      <div class="empty-desc">Click Start Camera to initialize video detection loop.</div>
+                      <div class="empty-title">FEED STREAM READY</div>
+                      <div class="empty-desc">Choose Recorded Video or Live Camera to initialize YOLOv11 person detection loop.</div>
                       <div class="camera-actions-row mt-4">
-                        <button onclick="startCamera()" class="btn-primary">▶ START CAMERA ENGINE</button>
-                        <button onclick="startBrowserCamera()" class="btn-primary-outline">🌐 USE LAPTOP WEBCAM</button>
+                        <button onclick="switchVideoSource('video')" class="btn-primary">🎬 PLAY RECORDED VIDEO</button>
+                        <button onclick="switchVideoSource('camera')" class="btn-primary-outline">📹 START LIVE CAMERA</button>
                       </div>
                     </div>
                     <img id="cctvExpandedStreamImg" src="" alt="Live Video Feed" style="display: none; width: 100%; height: 100%; object-fit: contain;">
@@ -868,6 +880,7 @@
                 </div>
 
                 <div class="telemetry-strip">
+                  <div class="tel-item"><span class="tel-label">SOURCE</span><span class="tel-val" id="camSecSource">OFFLINE</span></div>
                   <div class="tel-item"><span class="tel-label">STATUS</span><span class="tel-val camera-status-text">OFFLINE</span></div>
                   <div class="tel-item"><span class="tel-label">PEOPLE COUNT</span><span class="tel-val" id="camSecPeople">0</span></div>
                   <div class="tel-item"><span class="tel-label">FACES COUNT</span><span class="tel-val" id="camSecFaces">0</span></div>

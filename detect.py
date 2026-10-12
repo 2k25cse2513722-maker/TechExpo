@@ -20,8 +20,44 @@ print("Initializing Face Engine...")
 face_recognizer = FaceRecognizer(known_faces_dir=KNOWN_FACES_DIR, threshold=FACE_RECOGNITION_THRESHOLD)
 face_recognizer.load_known_faces()
 
-# Camera start
-camera = cv2.VideoCapture(0)
+import argparse
+
+# Parse command line source options
+parser = argparse.ArgumentParser(description="CampusVision AI Detection Engine")
+parser.add_argument("--source", choices=["camera", "video"], default="camera", help="Detection source (camera or video)")
+parser.add_argument("--video-path", default=None, help="Custom path to video file")
+args = parser.parse_args()
+
+CAMPUS_VIDEO_PATHS = [
+    r"C:\Users\anant\Videos\Captures\campus_demo.mp4.mp4",
+    "/mnt/c/Users/anant/Videos/Captures/campus_demo.mp4.mp4",
+]
+
+def resolve_video_path(custom=None):
+    if custom and os.path.exists(custom):
+        return custom
+    for p in CAMPUS_VIDEO_PATHS:
+        if os.path.exists(p):
+            return p
+    return None
+
+is_video = (args.source == "video")
+video_file = None
+
+if is_video:
+    video_file = resolve_video_path(args.video_path)
+    if not video_file:
+        print(f"Error: Recorded video file not found at: {CAMPUS_VIDEO_PATHS[0]}")
+        sys.exit(1)
+    print(f"Opening recorded video: {video_file}")
+    camera = cv2.VideoCapture(video_file)
+else:
+    print("Opening live camera (webcam)...")
+    camera = cv2.VideoCapture(0)
+
+if not camera.isOpened():
+    print(f"Error: Could not open {args.source}. Please verify connection/permissions.")
+    sys.exit(1)
 
 # API ko har 10 frames mein data bhejenge
 frame_number = 0
@@ -31,8 +67,13 @@ while True:
     success, frame = camera.read()
 
     if not success:
-        print("Camera nahi chal raha")
-        break
+        if is_video:
+            # Replay video seamlessly
+            camera.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            success, frame = camera.read()
+        if not success:
+            print("Video stream ended or camera disconnected.")
+            break
 
     # Frame number increase
     frame_number += 1

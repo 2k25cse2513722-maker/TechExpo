@@ -977,9 +977,23 @@ def occupancy():
 # 7. INTEGRATED YOLO CAMERA ENGINE & LIVE VIDEO STREAMING
 # =====================================================================
 
+# Recorded video paths (Windows & Linux/WSL)
+CAMPUS_VIDEO_PATHS = [
+    r"C:\Users\anant\Videos\Captures\campus_demo.mp4.mp4",
+    "/mnt/c/Users/anant/Videos/Captures/campus_demo.mp4.mp4",
+]
+
+def get_campus_video_path(custom_path: Optional[str] = None) -> Optional[str]:
+    if custom_path and os.path.exists(custom_path):
+        return custom_path
+    for p in CAMPUS_VIDEO_PATHS:
+        if os.path.exists(p):
+            return p
+    return None
+
 class CampusCameraDetector:
     """
-    Background Camera Engine that directly captures frames from webcam/CCTV,
+    Background Camera Engine that captures frames from webcam/CCTV or recorded video,
     executes YOLOv11 person detection, calculates real-time room occupancy,
     and publishes annotated video frames to the web dashboard.
     """
@@ -993,7 +1007,11 @@ class CampusCameraDetector:
         self.thread = None
         self.lock = threading.Lock()
         self.latest_count = 0
-        self.status_message = "Camera Standby (Click 'Start AI Camera' to activate)"
+        self.source_mode = "standby"  # "camera" | "video" | "standby"
+        self.source_label = "Standby"
+        self.current_video_path = None
+        self.status_message = "Standby (Select 'Recorded Video' or 'Live Camera' to activate)"
+
     def load_model(self):
         if self.model is None:
             try:
@@ -1013,52 +1031,118 @@ class CampusCameraDetector:
             except Exception as e:
                 print(f"[CampusVision AI] FaceRecognizer loading error: {e}")
                 self.face_recognizer = None
-    def start(self, camera_index: Optional[int] = None):
-        with self.lock:
-            if self.is_running:
-                return True, "Camera is already running"
 
-            if camera_index is not None:
-                self.camera_index = camera_index
+    def _stop_internal(self):
+        """Release video/camera resources without locking."""
+        self.is_running = False
+        if self.camera:
+            try:
+                self.camera.release()
+            except Exception:
+                pass
+            self.camera = None
+        if self.thread and self.thread.is_alive() and self.thread != threading.current_thread():
+            try:
+                self.thread.join(timeout=1.0)
+            except Exception:
+                pass
+        self.thread = None
+        global latest_camera_frame, latest_frame_time
+        latest_camera_frame = None
+        latest_frame_time = 0
+
+    def start(self, camera_index: Optional[int] = None, mode: str = "camera", video_path: Optional[str] = None):
+        with self.lock:
+            # If already running the requested mode, report active
+            if self.is_running and self.source_mode == mode:
+                return True, f"{mode.capitalize()} mode is already running"
+
+            # Always stop previous session cleanly when switching sources
+            if self.is_running:
+                self._stop_internal()
 
             self.load_model()
 
-            try:
-                self.camera = cv2.VideoCapture(self.camera_index)
-                if not self.camera.isOpened():
-                    self.camera = None
-                    self.status_message = f"Camera device {self.camera_index} not available"
+            if mode == "video":
+                target_video = get_campus_video_path(video_path)
+                if not target_video or not os.path.exists(target_video):
+                    self.source_mode = "standby"
+                    self.source_label = "Video Missing"
+                    self.status_message = f"Recorded video not found at: {r'C:\Users\anant\Videos\Captures\campus_demo.mp4.mp4'}"
                     return False, self.status_message
 
-                self.is_running = True
-                ai_state_manager.set_camera_active(True)
-                self.status_message = "Camera Active (YOLOv11 Detection Running)"
-                self.thread = threading.Thread(target=self._worker_loop, daemon=True)
-                self.thread.start()
-                print(f"[CampusVision AI] Camera {self.camera_index} detection loop started.")
-                return True, "Camera detection started successfully"
+                try:
+                    cap = cv2.VideoCapture(target_video)
+                    if not cap.isOpened():
+                        self.source_mode = "standby"
+                        self.status_message = f"Unable to open recorded video file: {target_video}"
+                        return False, self.status_message
 
-            except Exception as e:
-                self.is_running = False
-                if self.camera:
-                    self.camera.release()
-                    self.camera = None
-                self.status_message = f"Failed to start camera: {str(e)}"
-                return False, self.status_message
+                    self.camera = cap
+                    self.source_mode = "video"
+                    self.current_video_path = target_video
+                    self.source_label = "Recorded Video (campus_demo.mp4)"
+                    self.latest_count = 0
+                    self.status_message = "Recorded Video Active (YOLOv11 Detection Running)"
+                    self.is_running = True
+                    ai_state_manager.set_camera_active(True, source_mode="video", source_label=self.source_label)
+                    self.thread = threading.Thread(target=self._worker_loop, daemon=True)
+                    self.thread.start()
+                    print(f"[CampusVision AI] Recorded video playback started: {target_video}")
+                    return True, "Recorded video detection started successfully"
+                except Exception as e:
+                    self.is_running = False
+                    self.source_mode = "standby"
+                    if self.camera:
+                        self.camera.release()
+                        self.camera = None
+                    self.status_message = f"Failed to start video playback: {str(e)}"
+                    return False, self.status_message
+
+            else:  # Live Camera Mode
+                if camera_index is not None:
+                    self.camera_index = camera_index
+
+                try:
+                    cap = cv2.VideoCapture(self.camera_index)
+                    if not cap.isOpened():
+                        self.camera = None
+                        self.source_mode = "standby"
+                        self.status_message = f"Webcam device {self.camera_index} is not available. Please verify device permissions."
+                        return False, self.status_message
+
+                    self.camera = cap
+                    self.source_mode = "camera"
+                    self.source_label = "Live Camera (Webcam)"
+                    self.latest_count = 0
+                    self.status_message = "Live Camera Active (YOLOv11 Detection Running)"
+                    self.is_running = True
+                    ai_state_manager.set_camera_active(True, source_mode="camera", source_label=self.source_label)
+                    self.thread = threading.Thread(target=self._worker_loop, daemon=True)
+                    self.thread.start()
+                    print(f"[CampusVision AI] Live camera {self.camera_index} detection loop started.")
+                    return True, "Camera detection started successfully"
+                except Exception as e:
+                    self.is_running = False
+                    self.source_mode = "standby"
+                    if self.camera:
+                        self.camera.release()
+                        self.camera = None
+                    self.status_message = f"Failed to start camera: {str(e)}"
+                    return False, self.status_message
 
     def stop(self):
         with self.lock:
             if not self.is_running:
-                return True, "Camera is already stopped"
+                return True, "Capture is already stopped"
 
-            self.is_running = False
-            ai_state_manager.set_camera_active(False)
-            if self.camera:
-                self.camera.release()
-                self.camera = None
-            self.status_message = "Camera Stopped (Standby)"
-            print("[CampusVision AI] Camera detection loop stopped.")
-            return True, "Camera detection stopped successfully"
+            self._stop_internal()
+            self.source_mode = "standby"
+            self.source_label = "Offline"
+            ai_state_manager.set_camera_active(False, source_mode="standby", source_label="Offline")
+            self.status_message = "Detection Engine Stopped (Standby)"
+            print("[CampusVision AI] Detection loop stopped.")
+            return True, "Detection stopped successfully"
 
     def _worker_loop(self):
         global latest_camera_frame, latest_frame_time
@@ -1073,8 +1157,21 @@ class CampusCameraDetector:
 
             success, frame = self.camera.read()
             if not success:
-                time.sleep(0.04)
-                continue
+                if self.source_mode == "video":
+                    # Video playback completion and replay handling
+                    self.camera.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    success, frame = self.camera.read()
+                    if not success:
+                        try:
+                            if self.current_video_path and os.path.exists(self.current_video_path):
+                                self.camera.release()
+                                self.camera = cv2.VideoCapture(self.current_video_path)
+                                success, frame = self.camera.read()
+                        except Exception:
+                            pass
+                if not success:
+                    time.sleep(0.04)
+                    continue
 
             frame_idx += 1
             person_count = 0
@@ -1097,34 +1194,26 @@ class CampusCameraDetector:
                 except Exception as e:
                     annotated_frame = frame
 
-            if self.face_recognizer and frame_idx % 3 == 0:
+            # Face recognition on live camera
+            if self.source_mode == "camera" and self.face_recognizer and frame_idx % 3 == 0:
                 try:
                     face_results = self.face_recognizer.recognize_faces(frame)
-                    faces = face_results["faces"]
-                    recognized_count = face_results["recognized_count"]
-                    unknown_count = face_results["unknown_count"]
+                    faces = face_results.get("faces", [])
+                    recognized_count = face_results.get("recognized_count", 0)
+                    unknown_count = face_results.get("unknown_count", 0)
                     face_count = len(faces)
                     detections = faces
                 except Exception as e:
-                    print(f"Face recognition error: {e}")
-            else:
-                last_state = ai_state_manager.get_state()
-                face_count = last_state.get("face_count", 0)
-                recognized_count = last_state.get("recognized_count", 0)
-                unknown_count = last_state.get("unknown_count", 0)
-                detections = last_state.get("detections", [])
-                
-            for face in detections:
-                x1, y1, x2, y2 = face["box"]
-                name = face["name"]
-                
-                if face["status"] == "recognized":
-                    db.mark_attendance(face["student_id"])
-                    
-                color = (0, 255, 0) if name != "Unknown" else (0, 0, 255)
-                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 2)
-                cv2.putText(annotated_frame, name, (x1, max(y1 - 10, 0)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+                    pass
+                for face in detections:
+                    x1, y1, x2, y2 = face["box"]
+                    name = face["name"]
+                    if face.get("status") == "recognized":
+                        db.mark_attendance(face["student_id"])
+                    color = (0, 255, 0) if name != "Unknown" else (0, 0, 255)
+                    cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 2)
+                    cv2.putText(annotated_frame, name, (x1, max(y1 - 10, 0)),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
             curr_time = time_mod.time()
             fps = 1.0 / (curr_time - prev_time) if curr_time > prev_time else 30.0
@@ -1134,7 +1223,10 @@ class CampusCameraDetector:
                 fps_list.pop(0)
             avg_fps = sum(fps_list) / len(fps_list)
 
-            ai_state_manager.update_state(person_count, face_count, recognized_count, unknown_count, detections, avg_fps)
+            ai_state_manager.update_state(
+                person_count, face_count, recognized_count, unknown_count, detections, avg_fps,
+                source_mode=self.source_mode, source_label=self.source_label
+            )
             self.latest_count = person_count
 
             # Auto-sync with Room A-101 and Campus State
@@ -1146,23 +1238,24 @@ class CampusCameraDetector:
             # Record periodic history snapshot
             record_occupancy_log("A-101", person_count)
 
-            # Add modern PSIT CCTV overlay banner
+            # Modern PSIT CCTV / Video overlay banner
             h, w, _ = annotated_frame.shape
             ts = time.strftime("%Y-%m-%d %H:%M:%S")
             cv2.rectangle(annotated_frame, (0, 0), (w, 38), (15, 23, 42), -1)
+            feed_tag = "PSIT CCTV LIVE | Room A-101" if self.source_mode == "camera" else "PSIT RECORDED FEED | campus_demo.mp4"
             cv2.putText(
                 annotated_frame,
-                f"PSIT CCTV LIVE | Room A-101 | {ts}",
+                f"{feed_tag} | {ts}",
                 (14, 25),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.55,
+                0.52,
                 (0, 225, 255),
                 1,
                 cv2.LINE_AA
             )
             cv2.putText(
                 annotated_frame,
-                f"STUDENTS: {person_count}",
+                f"PERSONS: {person_count}",
                 (max(w - 200, 20), 25),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.65,
@@ -1177,7 +1270,10 @@ class CampusCameraDetector:
                 latest_camera_frame = buffer.tobytes()
                 latest_frame_time = time.time()
 
-            time.sleep(0.03)  # ~30 FPS
+            if self.source_mode == "video":
+                time.sleep(0.035)  # ~27 FPS pace for campus_demo.mp4
+            else:
+                time.sleep(0.03)  # ~30 FPS
 
         if self.camera:
             self.camera.release()
@@ -1192,27 +1288,48 @@ def get_camera_status():
         "is_running": camera_detector.is_running,
         "latest_count": camera_detector.latest_count,
         "room": "A-101",
-        "status_message": camera_detector.status_message
+        "status_message": camera_detector.status_message,
+        "source_mode": camera_detector.source_mode,
+        "source_label": camera_detector.source_label
     }
 
 @app.post("/api/camera/start")
-def start_camera():
-    """Start integrated camera and YOLO detection."""
-    success, msg = camera_detector.start()
+async def start_camera(request: Request, mode: Optional[str] = None):
+    """Start integrated camera or recorded video and YOLO detection."""
+    selected_mode = mode
+    video_path = None
+    try:
+        body = await request.json()
+        if isinstance(body, dict):
+            if "mode" in body and body["mode"]:
+                selected_mode = body["mode"]
+            if "video_path" in body and body["video_path"]:
+                video_path = body["video_path"]
+    except Exception:
+        pass
+
+    if not selected_mode:
+        selected_mode = "camera"
+
+    success, msg = camera_detector.start(mode=selected_mode, video_path=video_path)
     return {
         "success": success,
         "message": msg,
-        "is_running": camera_detector.is_running
+        "is_running": camera_detector.is_running,
+        "source_mode": camera_detector.source_mode,
+        "source_label": camera_detector.source_label
     }
 
 @app.post("/api/camera/stop")
 def stop_camera():
-    """Stop integrated camera and release hardware."""
+    """Stop integrated camera/video and release hardware/resources."""
     success, msg = camera_detector.stop()
     return {
         "success": success,
         "message": msg,
-        "is_running": camera_detector.is_running
+        "is_running": camera_detector.is_running,
+        "source_mode": camera_detector.source_mode,
+        "source_label": camera_detector.source_label
     }
 
 # =====================================================================

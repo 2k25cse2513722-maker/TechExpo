@@ -593,6 +593,19 @@ function updateCameraUI(cam) {
     const btnSecStart = document.getElementById("btnCameraSecStart");
     const btnSecStop = document.getElementById("btnCameraSecStop");
 
+    const btnSourceVideoMain = document.getElementById("btnSourceVideoMain");
+    const btnSourceCameraMain = document.getElementById("btnSourceCameraMain");
+    const btnStopSourceMain = document.getElementById("btnStopSourceMain");
+    const sourceBadgeMain = document.getElementById("sourceBadgeMain");
+
+    const btnSourceVideoSec = document.getElementById("btnSourceVideoSec");
+    const btnSourceCameraSec = document.getElementById("btnSourceCameraSec");
+    const tbBtnVideo = document.getElementById("tbBtnVideo");
+    const tbBtnCamera = document.getElementById("tbBtnCamera");
+
+    const telSource = document.getElementById("telSource");
+    const camSecSource = document.getElementById("camSecSource");
+
     const placeholder = document.getElementById("cameraPlaceholder");
     const expPlaceholder = document.getElementById("cameraExpandedPlaceholder");
     const streamImg = document.getElementById("cctvStreamImg");
@@ -604,10 +617,12 @@ function updateCameraUI(cam) {
     const liveIndicators = document.querySelectorAll(".camera-live-indicator, .live-dot-container");
 
     const isRunning = cam.is_running || Boolean(browserCameraStream);
+    const sourceMode = browserCameraStream ? 'camera' : (cam.source_mode || (isRunning ? 'camera' : 'standby'));
 
     if (isRunning) {
+        const statusText = sourceMode === 'video' ? "● VIDEO PLAYING" : "● CAMERA LIVE";
         camStatusTexts.forEach(el => {
-            el.innerText = "● CAMERA LIVE";
+            el.innerText = statusText;
             el.style.color = "var(--accent-green)";
         });
 
@@ -621,6 +636,37 @@ function updateCameraUI(cam) {
         if (btnStop) btnStop.style.display = "inline-flex";
         if (btnSecStart) btnSecStart.style.display = "none";
         if (btnSecStop) btnSecStop.style.display = "inline-flex";
+        if (btnStopSourceMain) btnStopSourceMain.style.display = "inline-flex";
+
+        // Active button styling
+        if (sourceMode === 'video') {
+            if (btnSourceVideoMain) btnSourceVideoMain.classList.add("active");
+            if (btnSourceCameraMain) btnSourceCameraMain.classList.remove("active");
+            if (btnSourceVideoSec) btnSourceVideoSec.classList.add("active");
+            if (btnSourceCameraSec) btnSourceCameraSec.classList.remove("active");
+            if (tbBtnVideo) tbBtnVideo.classList.add("active");
+            if (tbBtnCamera) tbBtnCamera.classList.remove("active");
+        } else {
+            if (btnSourceVideoMain) btnSourceVideoMain.classList.remove("active");
+            if (btnSourceCameraMain) btnSourceCameraMain.classList.add("active");
+            if (btnSourceVideoSec) btnSourceVideoSec.classList.remove("active");
+            if (btnSourceCameraSec) btnSourceCameraSec.classList.add("active");
+            if (tbBtnVideo) tbBtnVideo.classList.remove("active");
+            if (tbBtnCamera) tbBtnCamera.classList.add("active");
+        }
+
+        if (sourceBadgeMain) {
+            sourceBadgeMain.innerText = `SOURCE: ${sourceMode === 'video' ? 'RECORDED VIDEO' : 'LIVE CAMERA'}`;
+            sourceBadgeMain.style.color = "var(--accent-green)";
+        }
+        if (telSource) {
+            telSource.innerText = sourceMode === 'video' ? 'RECORDED VIDEO' : 'LIVE CAMERA';
+            telSource.className = 'tel-val text-green';
+        }
+        if (camSecSource) {
+            camSecSource.innerText = sourceMode === 'video' ? 'RECORDED VIDEO' : 'LIVE CAMERA';
+            camSecSource.className = 'tel-val text-green';
+        }
 
         if (placeholder) placeholder.style.display = "none";
         if (expPlaceholder) expPlaceholder.style.display = "none";
@@ -656,6 +702,27 @@ function updateCameraUI(cam) {
         if (btnStop) btnStop.style.display = "none";
         if (btnSecStart) btnSecStart.style.display = "inline-flex";
         if (btnSecStop) btnSecStop.style.display = "none";
+        if (btnStopSourceMain) btnStopSourceMain.style.display = "none";
+
+        if (btnSourceVideoMain) btnSourceVideoMain.classList.remove("active");
+        if (btnSourceCameraMain) btnSourceCameraMain.classList.remove("active");
+        if (btnSourceVideoSec) btnSourceVideoSec.classList.remove("active");
+        if (btnSourceCameraSec) btnSourceCameraSec.classList.remove("active");
+        if (tbBtnVideo) tbBtnVideo.classList.remove("active");
+        if (tbBtnCamera) tbBtnCamera.classList.remove("active");
+
+        if (sourceBadgeMain) {
+            sourceBadgeMain.innerText = "SOURCE: STANDBY";
+            sourceBadgeMain.style.color = "var(--cv-cyan-glow)";
+        }
+        if (telSource) {
+            telSource.innerText = "STANDBY";
+            telSource.className = "tel-val";
+        }
+        if (camSecSource) {
+            camSecSource.innerText = "OFFLINE";
+            camSecSource.className = "tel-val";
+        }
 
         if (placeholder) placeholder.style.display = "flex";
         if (expPlaceholder) expPlaceholder.style.display = "flex";
@@ -1836,36 +1903,79 @@ async function fetchSystemDiagnostics() {
 // =====================================================================
 // 13. HARDWARE & BROWSER CAMERA CONTROLS
 // =====================================================================
-async function startCamera() {
-    const btnStart = document.getElementById("btnStartCamera");
-    if (btnStart) btnStart.innerText = "◌ Starting...";
+let currentVideoSource = null;
+
+async function switchVideoSource(sourceType) {
+    if (browserCameraStream) {
+        stopBrowserCamera();
+    }
+
+    const btnVideoMain = document.getElementById("btnSourceVideoMain");
+    const btnCameraMain = document.getElementById("btnSourceCameraMain");
+    const btnVideoSec = document.getElementById("btnSourceVideoSec");
+    const btnCameraSec = document.getElementById("btnSourceCameraSec");
+
+    if (sourceType === 'video') {
+        if (btnVideoMain) btnVideoMain.innerText = "◌ LOADING...";
+        if (btnVideoSec) btnVideoSec.innerText = "◌ LOADING...";
+    } else {
+        if (btnCameraMain) btnCameraMain.innerText = "◌ STARTING...";
+        if (btnCameraSec) btnCameraSec.innerText = "◌ STARTING...";
+    }
+
     try {
-        const res = await fetch('/api/camera/start', { method: 'POST' });
+        const res = await fetch('/api/camera/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: sourceType })
+        });
         const data = await res.json();
         if (!data.success) {
-            alert("Hardware Camera Notice: " + data.message + "\nYou can also click 'Use Browser Webcam' to stream directly.");
+            const title = sourceType === 'video' ? "Recorded Video Notice" : "Live Camera Notice";
+            alert(`${title}: ${data.message}`);
+        } else {
+            currentVideoSource = sourceType;
+            reloadCameraStream();
         }
     } catch (e) {
-        alert("Unable to reach backend camera engine.");
+        console.error("Camera/Video switch request failed:", e);
+        alert("Unable to reach backend detection engine.");
     } finally {
-        if (btnStart) btnStart.innerText = "▶ START CAMERA";
+        if (btnVideoMain) btnVideoMain.innerText = "🎬 RECORDED VIDEO";
+        if (btnVideoSec) btnVideoSec.innerText = "🎬 RECORDED VIDEO";
+        if (btnCameraMain) btnCameraMain.innerText = "📹 LIVE CAMERA";
+        if (btnCameraSec) btnCameraSec.innerText = "📹 LIVE CAMERA";
         fetchDashboardData(true);
     }
+}
+
+async function startCamera() {
+    await switchVideoSource('camera');
 }
 
 async function stopCamera() {
     if (browserCameraStream) {
         stopBrowserCamera();
     }
+    currentVideoSource = null;
 
     const btnStop = document.getElementById("btnStopCamera");
+    const btnStopMain = document.getElementById("btnStopSourceMain");
+    const btnStopSec = document.getElementById("btnCameraSecStop");
+
     if (btnStop) btnStop.innerText = "◌ Stopping...";
+    if (btnStopMain) btnStopMain.innerText = "◌ STOPPING...";
+    if (btnStopSec) btnStopSec.innerText = "◌ STOPPING...";
+
     try {
         await fetch('/api/camera/stop', { method: 'POST' });
     } catch (e) {
-        console.error("Camera stop request failed.");
+        console.error("Camera stop request failed.", e);
     } finally {
         if (btnStop) btnStop.innerText = "■ STOP CAMERA";
+        if (btnStopMain) btnStopMain.innerText = "■ STOP";
+        if (btnStopSec) btnStopSec.innerText = "■ Stop";
+        reloadCameraStream();
         fetchDashboardData(true);
     }
 }

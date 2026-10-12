@@ -16,6 +16,8 @@ class AIState:
             "detections": [],
             "fps": 0.0,
             "camera_active": False,
+            "source_mode": "standby",
+            "source_label": "Standby",
             "timestamp": time.time()
         }
 
@@ -23,15 +25,17 @@ class AIState:
         with self.lock:
             self._reset()
 
-    def set_camera_active(self, active: bool):
+    def set_camera_active(self, active: bool, source_mode: str = "standby", source_label: str = "Standby"):
         with self.lock:
             if not active:
                 self._reset()
             else:
                 self.state["camera_active"] = True
+                self.state["source_mode"] = source_mode
+                self.state["source_label"] = source_label
                 self.state["timestamp"] = time.time()
 
-    def update_state(self, people_count: int, face_count: int, recognized_count: int, unknown_count: int, detections: list, fps: float):
+    def update_state(self, people_count: int, face_count: int, recognized_count: int, unknown_count: int, detections: list, fps: float, source_mode: str = "standby", source_label: str = "Standby"):
         with self.lock:
             self.state["people_count"] = people_count
             self.state["face_count"] = face_count
@@ -39,6 +43,8 @@ class AIState:
             self.state["unknown_count"] = unknown_count
             self.state["detections"] = detections
             self.state["fps"] = round(fps, 1)
+            self.state["source_mode"] = source_mode
+            self.state["source_label"] = source_label
             self.state["timestamp"] = time.time()
 
     def get_state(self):
